@@ -35,20 +35,6 @@ if (publishingPropsFile.exists()) {
     publishingProps.load(publishingPropsFile.inputStream())
 }
 
-// Check if the project properties includes a S3 server to use
-val gradleS3Endpoint = rootProject.findProperty("org.noelware.publishing.s3.endpoint")
-val gradleS3EndpointAsEnv: String? = System.getenv("NOELWARE_PUBLISHING_S3_ENDPOINT")
-
-// If it exists in the gradle.properties file, then set the S3 endpoint there
-if (gradleS3Endpoint != null) {
-    System.setProperty("org.gradle.s3.endpoint", gradleS3Endpoint as String)
-}
-
-// If the environment variable exists, then set it from there!
-if (gradleS3EndpointAsEnv != null && System.getProperty("org.gradle.s3.endpoint", "") == "") {
-    System.setProperty("org.gradle.s3.endpoint", gradleS3EndpointAsEnv)
-}
-
 // Check if we have the `NOELWARE_PUBLISHING_ACCESS_KEY` and `NOELWARE_PUBLISHING_SECRET_KEY` environment
 // variables, and if we do, set it in the publishing.properties loader.
 val accessKey: String? = System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY")
@@ -69,7 +55,7 @@ if (secretKey != null && publishingProps.getProperty("s3.secretKey") == "") {
 publishing {
     publications {
         create<MavenPublication>("remi") {
-            artifactId = "remi-$name"
+            artifactId = "remi-${project.name}"
             groupId = "org.noelware.remi"
             version = "$VERSION"
 
