@@ -35,3 +35,4 @@ jobs:
           NOELWARE_PUBLISHING_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
           NOELWARE_PUBLISHING_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           NOELWARE_PUBLISHING_IS_SNAPSHOT: "true"
+          NOELWARE_PUBLISHING_S3_ENDPOINT: https://s3.wasabisys.com
