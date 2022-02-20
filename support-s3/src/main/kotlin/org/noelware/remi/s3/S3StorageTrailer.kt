@@ -1,0 +1,170 @@
+/*
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
+ * and Amazon S3-compatible server, made in Kotlin!
+ *
+ * Copyright 2022 Noelware <team@noelware.org>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@file:Suppress("UNUSED")
+package org.noelware.remi.s3
+
+import kotlinx.serialization.*
+import org.noelware.remi.core.Configuration
+import org.noelware.remi.core.StorageTrailer
+import org.noelware.remi.s3.internal.AwsRegionSerializer
+import software.amazon.awssdk.auth.credentials.AwsCredentials
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.Bucket
+import java.io.InputStream
+import java.net.URI
+
+/**
+ * Represents the configuration for the [S3StorageTrailer].
+ * @param secretKey The secret key to use to authenticate with S3. If it doesn't exist, it will check for:
+ *
+ *                    - `aws.secret_key` JVM system property
+ *                    - AWS_SECRET_KEY environment variable
+ *                    - Anything under `~/.aws/config` or using the `AWS_CONFIG_FILE` environment variable
+ *                      to determine the location of the configuration endpoint.
+ *                    - Finding a profile under the `AWS_PROFILE` environment variable or using the `aws.profile`
+ *                      system property.
+ *                    - If all the above fails, the trailer will fail with an [Exception] thrown.
+ *
+ * @param accessKey The access key to use to authenticate with S3. If it doesn't exist, it will check for:
+ *
+ *                    - `aws.access_key` JVM system property
+ *                    - AWS_ACCESS_KEY environment variable
+ *                    - Anything under `~/.aws/config` or using the `AWS_CONFIG_FILE` environment variable
+ *                      to determine the location of the configuration endpoint.
+ *                    - Finding a profile under the `AWS_PROFILE` environment variable or using the `aws.profile`
+ *                      system property.
+ *                    - If all the above fails, the trailer will fail with an [Exception] thrown.
+ *
+ * @param endpoint An endpoint URI to use when using anything other than the [S3Provider.Amazon] or [S3Provider.Wasabi]
+ *                 providers.
+ *
+ * @param provider The [S3Provider] to use when configuring the S3 client.
+ * @param region   The region to use when connecting to the S3 service.
+ * @param bucket   The bucket name to use, it will default to `remi` if this is empty.
+ */
+@Serializable
+data class S3StorageConfig(
+    val secretKey: String? = null,
+    val accessKey: String? = null,
+    val endpoint: String? = null,
+    val provider: S3Provider = S3Provider.Amazon,
+
+    @Serializable(with = AwsRegionSerializer::class)
+    val region: Region = Region.US_EAST_1,
+    val bucket: String = "remi"
+): Configuration
+
+class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3StorageConfig> {
+    private lateinit var bucket: Bucket
+    private lateinit var client: S3Client
+    override val name: String = "remi:s3"
+
+    override suspend fun init() {
+        val builder = S3Client.builder()
+            .region(config.region)
+
+        if (config.secretKey != null || config.accessKey != null) {
+            builder.credentialsProvider(
+                StaticCredentialsProvider.create(object: AwsCredentials {
+                    override fun accessKeyId(): String = config.accessKey!!
+                    override fun secretAccessKey(): String = config.secretKey!!
+                })
+            )
+        }
+
+        if (config.endpoint != null) {
+            val uri = when (config.provider) {
+                S3Provider.Custom -> config.endpoint
+                S3Provider.Amazon -> ""
+                S3Provider.Wasabi -> config.provider.endpoint
+            } ?: error("Unable to locate endpoint in the provider or under the 'config.endpoint' option")
+
+            if (uri.isEmpty())
+                error("the endpoint cannot be empty")
+
+            builder.endpointOverride(URI.create(uri))
+        }
+
+        client = builder.build()
+        val buckets = client.listBuckets().buckets()
+        val found = buckets.find { it.name() == config.bucket }
+
+        if (found == null) {
+            try {
+                client.createBucket {
+                    it.bucket(config.bucket)
+                }
+
+                bucket = client.listBuckets().buckets().find { it.name() == config.bucket }!!
+            } catch (e: Exception) {
+                throw e
+            }
+        } else {
+            bucket = found
+        }
+    }
+
+    /**
+     * Opens a file under the [path] and returns the [InputStream] of the file.
+     */
+    override suspend fun open(path: String): InputStream? {
+        if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
+
+        // Check if we can find the object
+        return client.getObject {
+            it.bucket(config.bucket)
+            it.key(path)
+        } ?: return null
+    }
+
+    /**
+     * Deletes the file under the [path] and returns a [Boolean] if the
+     * operation was a success or not.
+     */
+    override suspend fun delete(path: String): Boolean {
+        if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
+
+        return client.deleteObject {
+            it.bucket(config.bucket)
+            it.key(path)
+        }.deleteMarker()
+    }
+
+    /**
+     * Checks if the file exists under this storage trailer.
+     * @param path The path to find the file.
+     */
+    override suspend fun exists(path: String): Boolean {
+        if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
+
+        val obj = client.headObject {
+            it.bucket(config.bucket)
+            it.key(path)
+        }
+
+        // TODO: does this mean the file is deleted...?
+        if (obj.deleteMarker()) return false
+
+        // TODO: does this mean it exists? LOL
+        return obj.hasMetadata()
+    }
+}

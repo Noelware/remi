@@ -40,10 +40,17 @@ data class FilesystemStorageConfig(val directory: String): Configuration
 class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): StorageTrailer<FilesystemStorageConfig> {
     override val name: String = "remi:filesystem"
 
+    override suspend fun init() {
+        val directory = File(config.directory)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+    }
+
     /**
      * Opens a file under the [path] and returns the [InputStream] of the file.
      */
-    override fun open(path: String): InputStream? {
+    override suspend fun open(path: String): InputStream? {
         val file = File(config.directory + path)
         return if (file.exists()) file.inputStream() else null
     }
@@ -52,7 +59,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * Deletes the file under the [path] and returns a [Boolean] if the
      * operation was a success or not.
      */
-    override fun delete(path: String): Boolean {
+    override suspend fun delete(path: String): Boolean {
         val file = File(config.directory + path)
         if (!file.exists()) return false
 
@@ -64,5 +71,5 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * Checks if the file exists under this storage trailer.
      * @param path The path to find the file.
      */
-    override fun exists(path: String): Boolean = File(config.directory + path).exists()
+    override suspend fun exists(path: String): Boolean = File(config.directory + path).exists()
 }

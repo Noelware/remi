@@ -30,20 +30,24 @@ open interface StorageTrailer<C: Configuration> {
     val config: C
     val name: String
 
+    suspend fun init() {
+        TODO("Storage trailer $name doesn't support StorageTrailer#init/0")
+    }
+
     /**
      * Opens a file under the [path] and returns the [InputStream] of the file.
      */
-    fun open(path: String): InputStream?
+    suspend fun open(path: String): InputStream?
 
     /**
      * Deletes the file under the [path] and returns a [Boolean] if the
      * operation was a success or not.
      */
-    fun delete(path: String): Boolean
+    suspend fun delete(path: String): Boolean
 
     /**
      * Checks if the file exists under this storage trailer.
      * @param path The path to find the file.
      */
-    fun exists(path: String): Boolean
+    suspend fun exists(path: String): Boolean
 }

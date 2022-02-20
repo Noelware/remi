@@ -69,9 +69,9 @@ spotless {
 
 tasks {
     withType<KotlinCompile> {
-//        jvmTarget = JAVA_VERSION.toString()
-//        javaParameters = true
-//        freeCompilerArgs += listOf("-Xopt-in=kotlin.RequiresOptIn")
+        kotlinOptions.jvmTarget = JAVA_VERSION.toString()
+        kotlinOptions.javaParameters = true
+        kotlinOptions.freeCompilerArgs += listOf("-Xopt-in=kotlin.RequiresOptIn")
     }
 }
 
