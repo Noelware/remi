@@ -53,6 +53,10 @@ if (gradleS3EndpointAsEnv != null && System.getProperty("org.gradle.s3.endpoint"
 // variables, and if we do, set it in the publishing.properties loader.
 val accessKey: String? = System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY")
 val secretKey: String? = System.getenv("NOELWARE_PUBLISHING_SECRET_KEY")
+val snapshotRelease: Boolean = run {
+    val env = System.getenv("NOELWARE_PUBLISHING_IS_SNAPSHOT") ?: "false"
+    env == "true"
+}
 
 if (accessKey != null && publishingProps.getProperty("s3.accessKey") == "") {
     publishingProps.setProperty("s3.accessKey", accessKey)
@@ -115,7 +119,8 @@ publishing {
     }
 
     repositories {
-        maven(url = "s3://maven.noelware.org") {
+        val url = if (snapshotRelease) "s3://maven.noelware.org/snapshots" else "s3://maven.noelware.org"
+        maven(url) {
             credentials(AwsCredentials::class.java) {
                 accessKey = publishingProps.getProperty("s3.accessKey") ?: ""
                 secretKey = publishingProps.getProperty("s3.secretKey") ?: ""
