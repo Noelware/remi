@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("RemiTypesKt")
+@file:Suppress("UNUSED")
 package org.noelware.remi.core
 
 /**

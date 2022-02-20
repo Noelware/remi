@@ -38,6 +38,9 @@ repositories {
 }
 
 dependencies {
+    api("org.jetbrains.kotlinx:kotlinx-serialization-core")
+    api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.3.1"))
+
     if (name.startsWith("support-")) {
         implementation(project(":core"))
     }

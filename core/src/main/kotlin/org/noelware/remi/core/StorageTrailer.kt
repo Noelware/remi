@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("StorageTrailerDefinitionsKt")
+@file:Suppress("UNUSED")
 package org.noelware.remi.core
 
 import java.io.InputStream
@@ -31,7 +33,7 @@ open interface StorageTrailer<C: Configuration> {
     /**
      * Opens a file under the [path] and returns the [InputStream] of the file.
      */
-    fun open(path: String): InputStream
+    fun open(path: String): InputStream?
 
     /**
      * Deletes the file under the [path] and returns a [Boolean] if the
