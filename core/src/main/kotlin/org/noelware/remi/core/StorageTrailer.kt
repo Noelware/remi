@@ -26,7 +26,7 @@ import java.io.InputStream
 /**
  * Represents a trailer on how to handle storage operations.
  */
-open interface StorageTrailer<C: Configuration> {
+interface StorageTrailer<C: Configuration> {
     val config: C
     val name: String
 
@@ -50,4 +50,18 @@ open interface StorageTrailer<C: Configuration> {
      * @param path The path to find the file.
      */
     suspend fun exists(path: String): Boolean
+
+    /**
+     * Uploads file to this storage trailer and returns a [Boolean] result
+     * if the operation was a success or not.
+     *
+     * @param path The path to upload the file to
+     * @param stream The [InputStream] that represents the raw data.
+     * @param contentType The content type of the file (useful for S3 and GCS support)!
+     */
+    suspend fun upload(
+        path: String,
+        stream: InputStream,
+        contentType: String = "application/octet-stream"
+    ): Boolean
 }

@@ -20,15 +20,19 @@
 @file:Suppress("UNUSED")
 package org.noelware.remi.s3
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.StorageTrailer
-import org.noelware.remi.s3.internal.AwsRegionSerializer
+import org.noelware.remi.s3.serializers.AwsRegionSerializer
 import software.amazon.awssdk.auth.credentials.AwsCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.Bucket
+import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.InputStream
 import java.net.URI
 
@@ -74,8 +78,7 @@ data class S3StorageConfig(
 ): Configuration
 
 class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3StorageConfig> {
-    private lateinit var bucket: Bucket
-    private lateinit var client: S3Client
+    lateinit var client: S3Client
     override val name: String = "remi:s3"
 
     override suspend fun init() {
@@ -113,13 +116,11 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 client.createBucket {
                     it.bucket(config.bucket)
                 }
-
-                bucket = client.listBuckets().buckets().find { it.name() == config.bucket }!!
             } catch (e: Exception) {
                 throw e
             }
         } else {
-            bucket = found
+            // do nothing if it was found
         }
     }
 
@@ -130,10 +131,10 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
         if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
 
         // Check if we can find the object
-        return client.getObject {
+        return client.getObject({
             it.bucket(config.bucket)
             it.key(path)
-        } ?: return null
+        }, ResponseTransformer.toInputStream()) ?: return null
     }
 
     /**
@@ -166,5 +167,40 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
 
         // TODO: does this mean it exists? LOL
         return obj.hasMetadata()
+    }
+
+    /**
+     * Uploads file to this storage trailer and returns a [Boolean] result
+     * if the operation was a success or not.
+     *
+     * @param path The path to upload the file to
+     * @param stream The [InputStream] that represents the raw data.
+     */
+    override suspend fun upload(
+        path: String,
+        stream: InputStream,
+        contentType: String
+    ): Boolean {
+        if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
+
+        // Get the content from the InputStream
+        val contents = withContext(Dispatchers.IO) {
+            stream.readAllBytes()
+        }
+
+        return try {
+            client.putObject({
+                it.bucket(config.bucket)
+                it.key(path)
+                it.contentLength(contents.size.toLong())
+                it.contentType(contentType)
+            }, RequestBody.fromBytes(contents))
+
+            true
+        } catch (e: S3Exception) {
+            throw e
+        } catch (e: Exception) {
+            false
+        }
     }
 }

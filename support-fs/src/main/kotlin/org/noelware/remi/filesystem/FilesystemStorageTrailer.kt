@@ -20,6 +20,8 @@
 @file:Suppress("UNUSED")
 package org.noelware.remi.filesystem
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.StorageTrailer
@@ -32,6 +34,12 @@ import java.io.InputStream
  */
 @Serializable
 data class FilesystemStorageConfig(val directory: String): Configuration
+
+/**
+ * Constructs a new [FilesystemStorageTrailer] instance with a supplied [directory].
+ */
+fun FilesystemStorageTrailer(directory: String): FilesystemStorageTrailer =
+    FilesystemStorageTrailer(FilesystemStorageConfig(directory))
 
 /**
  * Represents a [storage trailer][StorageTrailer] for supporting the local disk that the
@@ -51,7 +59,13 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * Opens a file under the [path] and returns the [InputStream] of the file.
      */
     override suspend fun open(path: String): InputStream? {
-        val file = File(config.directory + path)
+        val actualPath = when {
+            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
+            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
+            else -> path
+        }
+
+        val file = File(actualPath)
         return if (file.exists()) file.inputStream() else null
     }
 
@@ -60,10 +74,16 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * operation was a success or not.
      */
     override suspend fun delete(path: String): Boolean {
-        val file = File(config.directory + path)
+        val actualPath = when {
+            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
+            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
+            else -> path
+        }
+
+        val file = File(actualPath)
         if (!file.exists()) return false
 
-        file.delete()
+        file.deleteRecursively()
         return true
     }
 
@@ -71,5 +91,42 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * Checks if the file exists under this storage trailer.
      * @param path The path to find the file.
      */
-    override suspend fun exists(path: String): Boolean = File(config.directory + path).exists()
+    override suspend fun exists(path: String): Boolean {
+        val actualPath = when {
+            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
+            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
+            else -> path
+        }
+
+        return File(actualPath).exists()
+    }
+
+    /**
+     * Uploads file to this storage trailer and returns a [Boolean] result
+     * if the operation was a success or not.
+     *
+     * @param path The path to upload the file to
+     * @param stream The [InputStream] that represents the raw data.
+     * @param contentType This property is ignored in this storage trailer
+     */
+    override suspend fun upload(path: String, stream: InputStream, contentType: String): Boolean {
+        val actualPath = when {
+            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
+            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
+            else -> path
+        }
+
+        val file = File(actualPath)
+        withContext(Dispatchers.IO) {
+            file.createNewFile()
+        }
+
+        // convert the stream into an array of bytes
+        val contents = withContext(Dispatchers.IO) {
+            stream.readAllBytes()
+        }
+
+        file.writeBytes(contents)
+        return true
+    }
 }

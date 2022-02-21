@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.noelware.remi.s3.internal
+package org.noelware.remi.s3.serializers
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
