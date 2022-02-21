@@ -7,4 +7,4 @@ module:support-fs
 org.noelware.remi.filesystem
 module:support-s3
 org.noelware.remi.s3
-org.noelware.remi.s3.internal
+org.noelware.remi.s3.serializers
