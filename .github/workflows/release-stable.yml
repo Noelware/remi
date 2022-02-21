@@ -29,6 +29,9 @@ jobs:
       - name: Check if project can be compiled
         run: ./gradlew compileKotlin
 
+      - name: Unit test the project
+        run: ./gradlew kotest
+
       - name: Release!
         run: ./gradlew publish -Dorg.gradle.s3.endpoint=https://s3.wasabisys.com
         env:
