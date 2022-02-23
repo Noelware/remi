@@ -21,6 +21,8 @@ import org.noelware.remi.gradle.*
 import java.util.Properties
 
 plugins {
+    id("org.jetbrains.dokka")
+    kotlin("jvm")
     `maven-publish`
 }
 
@@ -52,12 +54,33 @@ if (secretKey != null && publishingProps.getProperty("s3.secretKey") == "") {
     publishingProps.setProperty("s3.secretKey", secretKey)
 }
 
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+val dokkaJar by tasks.registering(Jar::class) {
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    description = "Assemble Kotlin documentation with Dokka"
+
+    archiveClassifier.set("javadoc")
+    from(tasks.dokkaHtml)
+    dependsOn(tasks.dokkaHtml)
+}
+
 publishing {
     publications {
         create<MavenPublication>("remi") {
+            // Since `remi-bom` doesn't include any
+            // sources, let's just do this :blep:
+            from(components["kotlin"])
+
             artifactId = "remi-${project.name}"
             groupId = "org.noelware.remi"
             version = "$VERSION"
+
+            artifact(sourcesJar.get())
+            artifact(dokkaJar.get())
 
             pom {
                 description by "Library to handling files for persistent storage with Google Cloud Storage, Amazon S3, and the file system."

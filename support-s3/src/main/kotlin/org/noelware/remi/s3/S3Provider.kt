@@ -42,7 +42,7 @@ enum class S3Provider(val key: String, val endpoint: String? = null) {
             encoder.encodeString(value.key)
         }
 
-        override fun deserialize(decoder: Decoder): S3Provider = when (val key = decoder.decodeString()) {
+        override fun deserialize(decoder: Decoder): S3Provider = when (decoder.decodeString()) {
             "wasabi" -> Wasabi
             "custom" -> Custom
             "amazon" -> Amazon
