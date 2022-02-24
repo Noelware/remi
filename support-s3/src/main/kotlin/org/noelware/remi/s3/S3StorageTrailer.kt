@@ -26,18 +26,26 @@ import kotlinx.serialization.*
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.StorageTrailer
 import org.noelware.remi.s3.serializers.AwsRegionSerializer
+import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
+import org.noelware.remi.s3.serializers.ObjectCannedACLSerializer
 import software.amazon.awssdk.auth.credentials.AwsCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.BucketCannedACL
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.InputStream
 import java.net.URI
+import kotlin.contracts.contract
 
 /**
  * Represents the configuration for the [S3StorageTrailer].
+ *
+ * @param defaultObjectAcl The default ACL policy for all objects uploaed using the `upload/3` API.
+ * @param defaultAcl The default ACL policy for this bucket if it needs to be created.
  * @param secretKey The secret key to use to authenticate with S3. If it doesn't exist, it will check for:
  *
  *                    - `aws.secret_key` JVM system property
@@ -67,6 +75,11 @@ import java.net.URI
  */
 @Serializable
 data class S3StorageConfig(
+    @Serializable(with = ObjectCannedACLSerializer::class)
+    val defaultObjectAcl: ObjectCannedACL = ObjectCannedACL.BUCKET_OWNER_FULL_CONTROL,
+
+    @Serializable(with = BucketCannedACLSerializer::class)
+    val defaultAcl: BucketCannedACL = BucketCannedACL.PUBLIC_READ,
     val secretKey: String? = null,
     val accessKey: String? = null,
     val endpoint: String? = null,
@@ -97,7 +110,7 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
         if (config.endpoint != null) {
             val uri = when (config.provider) {
                 S3Provider.Custom -> config.endpoint
-                S3Provider.Amazon -> ""
+                S3Provider.Amazon -> "s3.amazonaws.com"
                 S3Provider.Wasabi -> config.provider.endpoint
             } ?: error("Unable to locate endpoint in the provider or under the 'config.endpoint' option")
 
@@ -114,6 +127,7 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
         if (found == null) {
             try {
                 client.createBucket {
+                    it.acl(config.defaultAcl)
                     it.bucket(config.bucket)
                 }
             } catch (e: Exception) {
@@ -131,10 +145,19 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
         if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
 
         // Check if we can find the object
-        return client.getObject({
-            it.bucket(config.bucket)
-            it.key(path)
-        }, ResponseTransformer.toInputStream()) ?: return null
+        return try {
+            client.getObject({
+                it.bucket(config.bucket)
+                it.key(path)
+            }, ResponseTransformer.toInputStream()) ?: return null
+        } catch (e: S3Exception) {
+            if (e.message?.contains("specified key does not exist") == true)
+                return null
+
+            throw e
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     /**
@@ -144,10 +167,13 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
     override suspend fun delete(path: String): Boolean {
         if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
 
-        return client.deleteObject {
+        val result = client.deleteObject {
             it.bucket(config.bucket)
             it.key(path)
-        }.deleteMarker()
+        }
+
+        // i don't know
+        return result?.deleteMarker() ?: true
     }
 
     /**
@@ -194,6 +220,7 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 it.key(path)
                 it.contentLength(contents.size.toLong())
                 it.contentType(contentType)
+                it.acl(config.defaultObjectAcl)
             }, RequestBody.fromBytes(contents))
 
             true

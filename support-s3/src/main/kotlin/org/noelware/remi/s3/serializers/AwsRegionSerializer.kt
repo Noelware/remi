@@ -32,7 +32,6 @@ import software.amazon.awssdk.regions.Region
  */
 object AwsRegionSerializer: KSerializer<Region> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("aws.Region", PrimitiveKind.STRING)
-    private val values = Region.regions()
 
     override fun serialize(encoder: Encoder, value: Region) {
         encoder.encodeString(value.id())

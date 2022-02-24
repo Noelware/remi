@@ -13,10 +13,10 @@ The library is split into five modules:
 - [remi-core](./core) - Core abstractions that is used for the storage units.
 - [remi-support-fs](./support-fs) - Support for using the local filesystem
 - [remi-support-gcs](./support-gcs) - Support for using Google Cloud Storage
-- [remi-support-s3](./support-s3) - Support for using any compatible Amazon S3 service like Wasabi or MinIO
+- [remi-support-s3](./support-s3) - Support for using any compatible Amazon S3 service like Wasabi and MinIO!
 
 ## Installation
-> [:scroll: Documentation](https://docs.noelware.org/libraries/remi) | :eyes: v**0.0.1**
+> [:scroll: Documentation](https://docs.noelware.org/libraries/remi) | :eyes: v**0.0.4-SNAPSHOT**
 
 ### Gradle
 #### Kotlin DSL
