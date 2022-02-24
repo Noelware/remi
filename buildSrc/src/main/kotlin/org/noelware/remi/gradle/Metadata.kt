@@ -22,5 +22,5 @@ package org.noelware.remi.gradle
 import gay.floof.gradle.utils.*
 import org.gradle.api.JavaVersion
 
-val VERSION = Version(0, 0, 3, 0, ReleaseType.Snapshot)
+val VERSION = Version(0, 0, 4, 0, ReleaseType.Snapshot)
 val JAVA_VERSION = JavaVersion.VERSION_17

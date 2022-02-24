@@ -39,19 +39,9 @@ if (publishingPropsFile.exists()) {
 
 // Check if we have the `NOELWARE_PUBLISHING_ACCESS_KEY` and `NOELWARE_PUBLISHING_SECRET_KEY` environment
 // variables, and if we do, set it in the publishing.properties loader.
-val accessKey: String? = System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY")
-val secretKey: String? = System.getenv("NOELWARE_PUBLISHING_SECRET_KEY")
 val snapshotRelease: Boolean = run {
     val env = System.getenv("NOELWARE_PUBLISHING_IS_SNAPSHOT") ?: "false"
     env == "true"
-}
-
-if (accessKey != null && publishingProps.getProperty("s3.accessKey") == "") {
-    publishingProps.setProperty("s3.accessKey", accessKey)
-}
-
-if (secretKey != null && publishingProps.getProperty("s3.secretKey") == "") {
-    publishingProps.setProperty("s3.secretKey", secretKey)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
@@ -131,8 +121,8 @@ publishing {
         val url = if (snapshotRelease) "s3://maven.noelware.org/snapshots" else "s3://maven.noelware.org"
         maven(url) {
             credentials(AwsCredentials::class.java) {
-                accessKey = publishingProps.getProperty("s3.accessKey") ?: ""
-                secretKey = publishingProps.getProperty("s3.secretKey") ?: ""
+                accessKey = publishingProps.getProperty("s3.accessKey") ?: System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY") ?: ""
+                secretKey = publishingProps.getProperty("s3.secretKey") ?: System.getenv("NOELWARE_PUBLISHING_SECRET_KEY") ?: ""
             }
         }
     }
