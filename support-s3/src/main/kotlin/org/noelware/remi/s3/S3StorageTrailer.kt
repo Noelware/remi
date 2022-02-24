@@ -39,7 +39,6 @@ import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.InputStream
 import java.net.URI
-import kotlin.contracts.contract
 
 /**
  * Represents the configuration for the [S3StorageTrailer].

@@ -1,3 +1,22 @@
+/*
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
+ * and Amazon S3-compatible server, made in Kotlin!
+ *
+ * Copyright 2022 Noelware <team@noelware.org>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.noelware.remi.s3.tests
 
 import io.kotest.core.spec.style.DescribeSpec
@@ -13,15 +32,17 @@ import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import java.io.ByteArrayInputStream
 
 class S3Tests: DescribeSpec({
-    val storage = S3StorageTrailer(S3StorageConfig(
-        defaultObjectAcl = ObjectCannedACL.PUBLIC_READ,
-        accessKey = System.getenv("S3_ACCESS_KEY"),
-        secretKey = System.getenv("S3_SECRET_KEY"),
-        endpoint = "https://s3.wasabisys.com",
-        provider = S3Provider.Custom,
-        bucket = "remi-noelware-test",
-        region = Region.US_EAST_1
-    ))
+    val storage = S3StorageTrailer(
+        S3StorageConfig(
+            defaultObjectAcl = ObjectCannedACL.PUBLIC_READ,
+            accessKey = System.getenv("S3_ACCESS_KEY"),
+            secretKey = System.getenv("S3_SECRET_KEY"),
+            endpoint = "https://s3.wasabisys.com",
+            provider = S3Provider.Custom,
+            bucket = "remi-noelware-test",
+            region = Region.US_EAST_1
+        )
+    )
 
     beforeSpec {
         storage.init()
