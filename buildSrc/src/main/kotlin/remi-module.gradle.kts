@@ -49,7 +49,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
     // testing utilities
-    testImplementation(platform("io.kotest:kotest-bom:5.2.0"))
+    testImplementation(platform("io.kotest:kotest-bom:5.2.1"))
     testImplementation("io.kotest:kotest-runner-junit5")
     testImplementation("io.kotest:kotest-assertions-core")
     testImplementation("io.kotest:kotest-property")
