@@ -23,6 +23,6 @@ plugins {
 }
 
 dependencies {
-    api(platform("software.amazon.awssdk:bom:2.17.154"))
+    api(platform("software.amazon.awssdk:bom:2.17.155"))
     api("software.amazon.awssdk:s3")
 }
