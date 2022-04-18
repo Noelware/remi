@@ -1,4 +1,4 @@
-# module org.noelware.remi.filesystem
+# Module org.noelware.remi.filesystem
 This module adds the storage trailer implementation for using the local disk the application is running on.
 
 ## Examples

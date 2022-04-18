@@ -1,4 +1,4 @@
-# module org.noelware.remi.s3
+# Module org.noelware.remi.s3
 This implements the storage trailer for using a compatible **Amazon S3** server with Remi. This supports:
 
 - Wasabi (using `S3Provider.Wasabi`)
