@@ -22,8 +22,10 @@ package org.noelware.remi.s3
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.*
 import kotlinx.serialization.*
 import org.noelware.remi.core.Configuration
+import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
 import org.noelware.remi.s3.serializers.AwsRegionSerializer
 import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
@@ -227,6 +229,28 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
             throw e
         } catch (e: Exception) {
             false
+        }
+    }
+
+    /**
+     * Lists all the contents as a list of [objects][Object].
+     */
+    override suspend fun listAll(): List<Object> {
+        val objects = client.listObjects {
+            it.bucket(config.bucket)
+        }
+
+        return objects.contents().map {
+            val name = it.key()
+            val size = it.size()
+            val lastModified = it.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault())
+
+            Object(
+                "",
+                lastModified,
+                size,
+                name
+            )
         }
     }
 }

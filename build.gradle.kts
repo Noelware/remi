@@ -39,7 +39,7 @@ repositories {
 
 tasks {
     wrapper {
-        version = "7.3.3"
+        version = "7.4.2"
         distributionType = ALL
     }
 

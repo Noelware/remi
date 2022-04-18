@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("StorageTrailerDefinitionsKt")
+@file:JvmName("StorageTrailerDefinitionKt")
 @file:Suppress("UNUSED")
 package org.noelware.remi.core
 
@@ -64,4 +64,9 @@ interface StorageTrailer<C: Configuration> {
         stream: InputStream,
         contentType: String = "application/octet-stream"
     ): Boolean
+
+    /**
+     * Lists all the contents as a list of [objects][Object].
+     */
+    suspend fun listAll(): List<Object>
 }

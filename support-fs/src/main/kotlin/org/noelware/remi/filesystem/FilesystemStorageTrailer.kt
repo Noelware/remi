@@ -21,12 +21,20 @@
 package org.noelware.remi.filesystem
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import org.noelware.remi.core.Configuration
+import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.attribute.BasicFileAttributeView
 
 /**
  * Represents the configuration of configuring the [FilesystemStorageTrailer].
@@ -66,7 +74,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
         }
 
         val file = File(actualPath)
-        return if (file.exists()) file.inputStream() else null
+        return file.ifExists { inputStream() }
     }
 
     /**
@@ -81,10 +89,10 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
         }
 
         val file = File(actualPath)
-        if (!file.exists()) return false
-
-        file.deleteRecursively()
-        return true
+        return file.ifExists {
+            deleteRecursively()
+            true
+        } ?: return false
     }
 
     /**
@@ -129,4 +137,33 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
         file.writeBytes(contents)
         return true
     }
+
+    /**
+     * Lists all the contents as a list of [objects][Object].
+     */
+    override suspend fun listAll(): List<Object> =
+        withContext(Dispatchers.IO) {
+            Files
+                .walk(Paths.get(config.directory))
+                .filter(Files::isRegularFile)
+                .map {
+                    val file = it.toFile()
+                    val attributes = runBlocking {
+                        withContext(Dispatchers.IO) {
+                            Files.getFileAttributeView(it, BasicFileAttributeView::class.java).readAttributes()
+                        }
+                    }
+
+                    Object(
+                        "",
+                        attributes
+                            .creationTime()
+                            .toInstant()
+                            .toKotlinInstant()
+                            .toLocalDateTime(TimeZone.currentSystemDefault()),
+                        attributes.size(),
+                        file.name
+                    )
+                }.toList()
+        }
 }

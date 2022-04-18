@@ -21,3 +21,7 @@ plugins {
     `remi-publishing`
     `remi-module`
 }
+
+dependencies {
+    api("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
+}

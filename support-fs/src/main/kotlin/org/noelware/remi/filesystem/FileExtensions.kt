@@ -17,10 +17,23 @@
  * limitations under the License.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.filesystem
 
-import gay.floof.gradle.utils.*
-import org.gradle.api.JavaVersion
+import java.io.File
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
-val VERSION = Version(0, 1, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+/**
+ * Extension for [File] if the [File] exists, then call the [body] function,
+ * or return `null` if it doesn't exist. It is present in utilities like [FilesystemStorageTrailer.open] and such.
+ *
+ * @param body The body to run if this [File] exists.
+ * @return The result of the [body] block, or null.
+ */
+@OptIn(ExperimentalContracts::class)
+fun <T> File.ifExists(body: File.() -> T): T? {
+    contract { callsInPlace(body, InvocationKind.EXACTLY_ONCE) }
+
+    return if (exists()) body() else null
+}

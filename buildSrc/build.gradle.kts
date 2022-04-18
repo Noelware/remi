@@ -36,7 +36,7 @@ dependencies {
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.6.20")
     implementation("io.kotest:kotest-gradle-plugin:0.3.9")
     implementation("gay.floof.utils:gradle-utils:1.3.0")
-    implementation(kotlin("gradle-plugin", version = "1.6.10"))
-    implementation(kotlin("serialization", version = "1.6.10"))
+    implementation(kotlin("gradle-plugin", version = "1.6.20"))
+    implementation(kotlin("serialization", version = "1.6.20"))
     implementation(gradleApi())
 }

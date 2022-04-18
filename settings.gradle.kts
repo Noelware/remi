@@ -19,17 +19,19 @@
 
 rootProject.name = "remi"
 
-// Google Cloud Storage support for Remi
-include(":support-gcs")
+include(
+    // Bill of Materials module for Remi
+    ":bom",
 
-// any Amazon S3 complaint server support for Remi
-include(":support-s3")
+    // Core implementation blueprints for Remi
+    ":core",
 
-// Filesystem support for Remi
-include(":support-fs")
+    // Filesystem support for Remi
+    ":support-fs",
 
-// Core implementation blueprints for Remi
-include(":core")
+    // any Amazon S3 complaint server support for Remi
+    ":support-s3",
 
-// Bill of Materials module for Remi
-include(":bom")
+    // Google Cloud Storage support for Remi
+    ":support-gcs"
+)

@@ -21,6 +21,9 @@
 @file:Suppress("UNUSED")
 package org.noelware.remi.core
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.SerialName
+
 /**
  * Represents the base configuration for constructing a [StorageTrailer].
  */
@@ -29,4 +32,35 @@ interface Configuration
 /**
  * Represents a "empty configuration" container
  */
-class EmptyConfiguration: Configuration
+object EmptyConfiguration: Configuration
+
+/**
+ * Represents an object from the [StorageTrailer] when using the listAll operation. This is a
+ * [Serializable] object, so you can use it with kotlinx.serialization :)
+ */
+@kotlinx.serialization.Serializable
+data class Object(
+    /**
+     * Represents the content type of this [Object], if needed to be sent
+     * through HTTP. By default, it will use the `application/octet-stream` content
+     * type if the content type couldn't be identified.
+     */
+    @SerialName("content_type")
+    val contentType: String,
+
+    /**
+     * Represents when this [Object] was created at.
+     */
+    @SerialName("created_at")
+    val createdAt: LocalDateTime,
+
+    /**
+     * Size in bytes how big this [Object] is.
+     */
+    val size: Long,
+
+    /**
+     * The name of this [Object].
+     */
+    val name: String
+)
