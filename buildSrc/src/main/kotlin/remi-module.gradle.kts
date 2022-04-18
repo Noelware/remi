@@ -86,6 +86,22 @@ tasks {
         kotlinOptions.javaParameters = true
         kotlinOptions.freeCompilerArgs += listOf("-Xopt-in=kotlin.RequiresOptIn")
     }
+
+    dokkaHtml {
+        dokkaSourceSets {
+            configureEach {
+                platform.set(org.jetbrains.dokka.Platform.jvm)
+                jdkVersion.set(17)
+                includes.from("DokkaDescription.md")
+
+                sourceLink {
+                    localDirectory.set(file("src/main/kotlin"))
+                    remoteUrl.set(uri("https://github.com/Noelware/remi/tree/master/${project.name}/src/main/kotlin").toURL())
+                    remoteLineSuffix.set("#L")
+                }
+            }
+        }
+    }
 }
 
 java {

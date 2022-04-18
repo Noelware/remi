@@ -31,7 +31,7 @@ if(savedDarkMode === true){
             </a>
     </div>
     <div>
-0.0.4-snapshot    </div>
+0.1-beta    </div>
     <div class="pull-right d-flex">
         <button id="theme-toggle-button"><span id="theme-toggle"></span></button>
         <div id="searchBar"></div>
@@ -45,6 +45,73 @@ if(savedDarkMode === true){
 <div class="main-content" id="content" pageIds="remi::.ext/allModules///PointingToDeclaration//0">
   <div class="breadcrumbs"></div>
   <div class="cover ">
+    <div class="cover ">
+      <h1 class="">🧶 Remi</h1>
+      <div class="sample-container">
+        <pre><code class="block lang-kotlin" theme="idea">
+            <p class="paragraph"><i>Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!</i></p>
+          </code></pre>
+<span class="top-right-position"><span class="copy-icon"></span>
+          <div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div>
+        </span></div>
+      <h2 class=""> Why is this built?</h2>
+      <p class="paragraph">This was built in the mind of <a href="https://arisu.land">Arisu</a> and <a href="https://charts.noelware.org">helm-server</a> to store any piece of data into different providers without repeating code and so on, and so forth. This is a simple library to take care of that!</p>
+      <p class="paragraph">We support any Amazon S3 compatible servers, Google Cloud Storage, and the local filesystem!</p>
+      <p class="paragraph">The library is split into five modules:</p>
+      <ul>
+        <li>
+          <p class="paragraph">./bom - Bill of Materials for Remi</p>
+        </li>
+        <li>
+          <p class="paragraph">./core - Core abstractions that is used for the storage units.</p>
+        </li>
+        <li>
+          <p class="paragraph">./support-fs - Support for using the local filesystem</p>
+        </li>
+        <li>
+          <p class="paragraph">./support-gcs - Support for using Google Cloud Storage</p>
+        </li>
+        <li>
+          <p class="paragraph">./support-s3 - Support for using any compatible Amazon S3 service like Wasabi and MinIO!</p>
+        </li>
+      </ul>
+      <h2 class=""> Installation</h2>
+      <div class="sample-container">
+        <pre><code class="block lang-kotlin" theme="idea">
+            <p class="paragraph"><a href="https://docs.noelware.org/libraries/remi">:scroll: Documentation</a> | :eyes: v<strong>0.0.4-SNAPSHOT</strong></p>
+          </code></pre>
+<span class="top-right-position"><span class="copy-icon"></span>
+          <div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div>
+        </span></div>
+      <h3 class=""> Gradle</h3>
+      <h4 class=""> Kotlin DSL</h4>
+      <div class="sample-container">
+        <pre><code class="block lang-kotlin" theme="idea">repositories {<br>    // If you're using the Noel Gradle Utils package, you can use the<br>    // `noelware` extension<br>    maven {<br>        url = uri(&quot;https://maven.noelware.org&quot;)<br>    }<br>}<br><br>dependencies {<br>    // If you're using the Noel Gradle Utils package, you can use<br>    // the `noelware` extension to automatically prefix `org.noelware.&lt;module&gt;`<br>    // in the dependency declaration<br>    implementation(&quot;org.noelware.remi:remi-&lt;module_name&gt;:&lt;version&gt;&quot;)<br>}</code></pre>
+<span class="top-right-position"><span class="copy-icon"></span>
+          <div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div>
+        </span></div>
+      <h3 class=""> Groovy DSL</h3>
+      <div class="sample-container">
+        <pre><code class="block lang-groovy" theme="idea">repositories {<br>    maven {<br>        url &quot;https://maven.noelware.org&quot;<br>    }<br>}<br><br>dependencies {<br>    implementation &quot;org.noelware.remi:remi-&lt;module_name&gt;:&lt;version&gt;&quot;<br>}</code></pre>
+<span class="top-right-position"><span class="copy-icon"></span>
+          <div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div>
+        </span></div>
+      <h3 class=""> Maven</h3>
+      <p class="paragraph">Declare the <strong>Noelware</strong> Maven repository under the <code class="lang-kotlin">&lt;repositories&gt;</code> chain:</p>
+      <div class="sample-container">
+        <pre><code class="block lang-xml" theme="idea">&lt;repositories&gt;<br>    &lt;repository&gt;<br>        &lt;id&gt;noelware-maven&lt;/id&gt;<br>        &lt;url&gt;https://maven.noelware.org&lt;/url&gt;<br>    &lt;/repository&gt;<br>&lt;/repositories&gt;</code></pre>
+<span class="top-right-position"><span class="copy-icon"></span>
+          <div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div>
+        </span></div>
+      <p class="paragraph">Now declare the dependency you want under the <code class="lang-kotlin">&lt;dependencies&gt;</code> chain:</p>
+      <div class="sample-container">
+        <pre><code class="block lang-xml" theme="idea">&lt;dependencies&gt;<br>    &lt;dependency&gt;<br>        &lt;groupId&gt;org.noelware.remi&lt;/groupId&gt;<br>        &lt;artifactId&gt;remi-{{NAME}}&lt;/artifactId&gt;<br>        &lt;version&gt;{{VERSION}}&lt;/version&gt;<br>        &lt;type&gt;pom&lt;/type&gt;<br>    &lt;/dependency&gt;<br>&lt;/dependencies&gt;</code></pre>
+<span class="top-right-position"><span class="copy-icon"></span>
+          <div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div>
+        </span></div>
+      <h2 class=""> License</h2>
+      <p class="paragraph"><strong>remi</strong> is released under the /LICENSE License by <strong>Noelware</strong>, read the <strong>LICENSE</strong> file in the <a href="https://github.com/Noelware/remi/blob/master/LICENSE">root repository</a> for more information.</p>
+    </div>
     <h2 class="">All modules:</h2>
     <div class="table"><a data-name="-387464810%2FMain%2F0" anchor-label="core" id="-387464810%2FMain%2F0" data-filterable-set=""></a>
       <div class="table-row">

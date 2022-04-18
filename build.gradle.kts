@@ -49,6 +49,8 @@ tasks {
 
     dokkaHtmlMultiModule.configure {
         dependsOn(clean)
+
+        includes.from("README.md")
         outputDirectory.set(file(DOKKA_OUTPUT))
     }
 }

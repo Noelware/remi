@@ -24,10 +24,10 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Check if Spotless finds any errors
-        run: ./gradlew spotlessCheck
+        run: ./gradlew spotlessCheck --no-daemon
 
       - name: Check if project can be compiled
-        run: ./gradlew compileKotlin
+        run: ./gradlew compileKotlin --no-daemon
 
       - name: Release!
         run: ./gradlew publish -Dorg.gradle.s3.endpoint=https://s3.wasabisys.com
