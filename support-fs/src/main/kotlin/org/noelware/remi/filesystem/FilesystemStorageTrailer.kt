@@ -27,6 +27,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
+import org.apache.tika.Tika
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
@@ -55,6 +56,7 @@ fun FilesystemStorageTrailer(directory: String): FilesystemStorageTrailer =
  */
 class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): StorageTrailer<FilesystemStorageConfig> {
     override val name: String = "remi:filesystem"
+    private val tika = Tika()
 
     override suspend fun init() {
         val directory = File(config.directory)
@@ -154,13 +156,16 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                         }
                     }
 
+                    val contentType = tika.detect(file) ?: "application/octet-stream"
                     Object(
-                        "",
+                        contentType,
+                        file.inputStream(),
                         attributes
                             .creationTime()
                             .toInstant()
                             .toKotlinInstant()
                             .toLocalDateTime(TimeZone.currentSystemDefault()),
+                        file,
                         attributes.size(),
                         file.name
                     )

@@ -22,7 +22,8 @@
 package org.noelware.remi.core
 
 import kotlinx.datetime.LocalDateTime
-import kotlinx.serialization.SerialName
+import java.io.File
+import java.io.InputStream
 
 /**
  * Represents the base configuration for constructing a [StorageTrailer].
@@ -38,21 +39,29 @@ object EmptyConfiguration: Configuration
  * Represents an object from the [StorageTrailer] when using the listAll operation. This is a
  * [Serializable] object, so you can use it with kotlinx.serialization :)
  */
-@kotlinx.serialization.Serializable
 data class Object(
     /**
      * Represents the content type of this [Object], if needed to be sent
      * through HTTP. By default, it will use the `application/octet-stream` content
      * type if the content type couldn't be identified.
      */
-    @SerialName("content_type")
     val contentType: String,
+
+    /**
+     * The raw input stream from the original file or object that was found.
+     */
+    val inputStream: InputStream,
 
     /**
      * Represents when this [Object] was created at.
      */
-    @SerialName("created_at")
     val createdAt: LocalDateTime,
+
+    /**
+     * Represents the original file that was found. Returns `null` if it was not found, this is
+     * usually the case with S3 and Google Cloud Storage. To get the raw bytes, you can use [inputStream]. :)
+     */
+    val original: File?,
 
     /**
      * Size in bytes how big this [Object] is.
@@ -63,4 +72,9 @@ data class Object(
      * The name of this [Object].
      */
     val name: String
-)
+) {
+    /**
+     * Returns this [Object]'s input stream from the original file or from the [inputStream] variable.
+     */
+    fun toInputStream(): InputStream = original?.inputStream() ?: inputStream
+}

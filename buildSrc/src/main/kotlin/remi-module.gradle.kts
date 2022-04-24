@@ -48,6 +48,9 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
+    // SLF4J for logging
+    api("org.slf4j:slf4j-api:1.7.36")
+
     // testing utilities
     testImplementation(platform("io.kotest:kotest-bom:5.2.3"))
     testImplementation("io.kotest:kotest-runner-junit5")
@@ -55,6 +58,7 @@ dependencies {
     testImplementation("io.kotest:kotest-property")
 
     if (name.startsWith("support-")) {
+        implementation("org.apache.tika:tika-core:2.3.0")
         implementation(project(":core"))
     }
 }

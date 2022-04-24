@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.*
 import kotlinx.serialization.*
+import org.apache.tika.Tika
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
@@ -37,6 +38,7 @@ import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.BucketCannedACL
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.InputStream
@@ -94,6 +96,7 @@ data class S3StorageConfig(
 class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3StorageConfig> {
     lateinit var client: S3Client
     override val name: String = "remi:s3"
+    private val tika = Tika()
 
     override suspend fun init() {
         val builder = S3Client.builder()
@@ -107,6 +110,27 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 })
             )
         }
+
+        // Check for JVM arguments
+        val accessKey = try {
+            System.getProperty("aws.accessKey")
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+
+        val secretKey = try {
+            System.getProperty("aws.secretKey")
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+
+        if (accessKey != null && secretKey != null)
+            builder.credentialsProvider(
+                StaticCredentialsProvider.create(object: AwsCredentials {
+                    override fun accessKeyId(): String = accessKey
+                    override fun secretAccessKey(): String = secretKey
+                })
+            )
 
         if (config.endpoint != null) {
             val uri = when (config.provider) {
@@ -144,6 +168,11 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
      */
     override suspend fun open(path: String): InputStream? {
         if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
+
+        val obj = client.getObject {
+            it.bucket(config.bucket)
+            it.key(path)
+        }
 
         // Check if we can find the object
         return try {
@@ -236,21 +265,50 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
      * Lists all the contents as a list of [objects][Object].
      */
     override suspend fun listAll(): List<Object> {
-        val objects = client.listObjects {
-            it.bucket(config.bucket)
+        var done = false
+        val list = mutableListOf<Object>()
+        var request = ListObjectsV2Request.builder()
+            .bucket(config.bucket)
+            .build()
+
+        while (!done) {
+            val res = client.listObjectsV2(request)
+
+            for (content in res.contents()) {
+                // TODO: is this slow for >50mb objects?
+                // TODO: find another way to get the input stream (for Tika)
+                val obj = client.getObject({
+                    it.bucket(config.bucket)
+                    it.key(content.key())
+                }, ResponseTransformer.toInputStream())
+
+                val name = content.key()
+                val size = content.size()
+                val lastModified = content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault())
+                val inputStream = obj as InputStream
+                val contentType = tika.detect(inputStream) ?: "application/octet-stream"
+
+                list.add(
+                    Object(
+                        contentType,
+                        inputStream,
+                        lastModified,
+                        null,
+                        size,
+                        name
+                    )
+                )
+            }
+
+            if (res.nextContinuationToken() == null) {
+                done = true
+            }
+
+            request = request.toBuilder()
+                .continuationToken(res.continuationToken())
+                .build()
         }
 
-        return objects.contents().map {
-            val name = it.key()
-            val size = it.size()
-            val lastModified = it.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault())
-
-            Object(
-                "",
-                lastModified,
-                size,
-                name
-            )
-        }
+        return list.toList()
     }
 }
