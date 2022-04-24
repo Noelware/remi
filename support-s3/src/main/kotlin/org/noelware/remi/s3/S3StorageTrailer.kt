@@ -33,7 +33,6 @@ import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
 import org.noelware.remi.s3.serializers.ObjectCannedACLSerializer
 import software.amazon.awssdk.auth.credentials.AwsCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
