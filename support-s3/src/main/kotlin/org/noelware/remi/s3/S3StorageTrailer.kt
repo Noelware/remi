@@ -33,6 +33,7 @@ import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
 import org.noelware.remi.s3.serializers.ObjectCannedACLSerializer
 import software.amazon.awssdk.auth.credentials.AwsCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
@@ -169,23 +170,16 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
     override suspend fun open(path: String): InputStream? {
         if (!::client.isInitialized) error("S3StorageTrailer#init/0 was not called.")
 
-        val obj = client.getObject {
-            it.bucket(config.bucket)
-            it.key(path)
-        }
-
         // Check if we can find the object
         return try {
             client.getObject({
                 it.bucket(config.bucket)
                 it.key(path)
             }, ResponseTransformer.toInputStream()) ?: return null
-        } catch (e: S3Exception) {
-            if (e.message?.contains("specified key does not exist") == true)
+        } catch (e: Exception) {
+            if (e.message?.contains("key does not exist") == true)
                 return null
 
-            throw e
-        } catch (e: Exception) {
             throw e
         }
     }
@@ -277,10 +271,14 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
             for (content in res.contents()) {
                 // TODO: is this slow for >50mb objects?
                 // TODO: find another way to get the input stream (for Tika)
-                val obj = client.getObject({
-                    it.bucket(config.bucket)
-                    it.key(content.key())
-                }, ResponseTransformer.toInputStream())
+                val obj = try {
+                    client.getObject({
+                        it.bucket(config.bucket)
+                        it.key(content.key())
+                    }, ResponseTransformer.toInputStream())
+                } catch (e: Exception) {
+                    null
+                } ?: continue
 
                 val name = content.key()
                 val size = content.size()
