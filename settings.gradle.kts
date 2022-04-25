@@ -32,6 +32,9 @@ include(
     // any Amazon S3 complaint server support for Remi
     ":support-s3",
 
+    // Proper MinIO support for Remi :)
+    ":support-minio",
+
     // Google Cloud Storage support for Remi
     //":support-gcs"
 )

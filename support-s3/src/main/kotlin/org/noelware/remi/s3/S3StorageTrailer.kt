@@ -24,7 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.*
 import kotlinx.serialization.*
-import org.apache.tika.Tika
+import org.noelware.remi.core.CHECK_WITH
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
@@ -96,7 +96,6 @@ data class S3StorageConfig(
 class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3StorageConfig> {
     lateinit var client: S3Client
     override val name: String = "remi:s3"
-    private val tika = Tika()
 
     override suspend fun init() {
         val builder = S3Client.builder()
@@ -268,27 +267,14 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
             val res = client.listObjectsV2(request)
 
             for (content in res.contents()) {
-                // TODO: is this slow for >50mb objects?
-                // TODO: find another way to get the input stream (for Tika)
-                val obj = try {
-                    client.getObject({
-                        it.bucket(config.bucket)
-                        it.key(content.key())
-                    }, ResponseTransformer.toInputStream())
-                } catch (e: Exception) {
-                    null
-                } ?: continue
-
                 val name = content.key()
                 val size = content.size()
                 val lastModified = content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault())
-                val inputStream = obj as InputStream
-                val contentType = tika.detect(inputStream) ?: "application/octet-stream"
 
                 list.add(
                     Object(
-                        contentType,
-                        inputStream,
+                        CHECK_WITH,
+                        null,
                         lastModified,
                         null,
                         size,

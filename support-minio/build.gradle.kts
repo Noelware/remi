@@ -17,10 +17,11 @@
  * limitations under the License.
  */
 
-package org.noelware.remi.gradle
+plugins {
+    `remi-publishing`
+    `remi-module`
+}
 
-import gay.floof.gradle.utils.*
-import org.gradle.api.JavaVersion
-
-val VERSION = Version(0, 1, 2, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+dependencies {
+    api("io.minio:minio:8.3.9")
+}

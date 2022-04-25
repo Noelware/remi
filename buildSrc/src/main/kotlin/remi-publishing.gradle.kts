@@ -74,7 +74,7 @@ publishing {
 
             pom {
                 description by "Library to handling files for persistent storage with Google Cloud Storage, Amazon S3, and the file system."
-                name by "remi-$name"
+                name by "remi-${project.name}"
                 url by "https://docs.noelware.org/libs/remi"
 
                 organization {

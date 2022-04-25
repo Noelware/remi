@@ -26,6 +26,12 @@ import java.io.File
 import java.io.InputStream
 
 /**
+ * This is the rare case that the content type cannot be checked due to the InputStream not being available. This is
+ * used for MinIO, S3, and GCS. The filesystem WILL never use this.
+ */
+const val CHECK_WITH = "The content type cannot be checked, please use StorageTrailer.contentType/2 to retrieve it."
+
+/**
  * Represents the base configuration for constructing a [StorageTrailer].
  */
 interface Configuration
@@ -45,12 +51,13 @@ data class Object(
      * through HTTP. By default, it will use the `application/octet-stream` content
      * type if the content type couldn't be identified.
      */
-    val contentType: String,
+    val contentType: String = CHECK_WITH,
 
     /**
-     * The raw input stream from the original file or object that was found.
+     * The raw input stream from the original file or object that was found. This can be null
+     * due to object requests for MinIO, S3, and GCS.
      */
-    val inputStream: InputStream,
+    val inputStream: InputStream?,
 
     /**
      * Represents when this [Object] was created at.
@@ -76,5 +83,5 @@ data class Object(
     /**
      * Returns this [Object]'s input stream from the original file or from the [inputStream] variable.
      */
-    fun toInputStream(): InputStream = original?.inputStream() ?: inputStream
+    fun toInputStream(): InputStream = original?.inputStream() ?: inputStream ?: error("Cannot convert this Object to InputStream due to it being `null`.")
 }

@@ -57,8 +57,10 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core")
     testImplementation("io.kotest:kotest-property")
 
+    // Tika (for content type checking)
+    implementation("org.apache.tika:tika-core:2.3.0")
+
     if (name.startsWith("support-")) {
-        implementation("org.apache.tika:tika-core:2.3.0")
         implementation(project(":core"))
     }
 }

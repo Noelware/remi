@@ -21,6 +21,7 @@
 @file:Suppress("UNUSED")
 package org.noelware.remi.core
 
+import org.apache.tika.Tika
 import java.io.InputStream
 
 /**
@@ -70,3 +71,10 @@ interface StorageTrailer<C: Configuration> {
      */
     suspend fun listAll(): List<Object>
 }
+
+/**
+ * Returns the content type of [InputStream] using Tika, or `application/octet-stream`,
+ * if none was found.
+ */
+fun <C: Configuration> StorageTrailer<C>.figureContentType(stream: InputStream): String =
+    Tika().detect(stream) ?: "application/octet-stream"

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+@file:Suppress("UNUSED")
 package org.noelware.remi.tests.fs
 
 import io.kotest.core.spec.style.DescribeSpec
