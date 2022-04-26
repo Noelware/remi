@@ -78,9 +78,25 @@ import java.net.URI
  */
 @Serializable
 data class S3StorageConfig(
+    /**
+     * If we should enable signer v4 requests when requesting to Amazon S3. This must be needs to be true
+     * for MinIO connections. Read more [here](https://docs.min.io/docs/how-to-use-aws-sdk-for-java-with-minio-server.html).
+     */
+    @SerialName("enable_signer_requests")
+    val enableSignerV4Requests: Boolean = false,
+
+    /**
+     * If the S3 client should be configured to use the new path style for S3 connections, read more
+     * [here](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/AmazonS3Builder.html#setPathStyleAccessEnabled-java.lang.Boolean-). This needs to be `true` if you're using a MinIO connection.
+     */
+    @SerialName("enforce_path_access_style")
+    val enforcePathAccessStyle: Boolean = false,
+
+    @SerialName("default_object_acl")
     @Serializable(with = ObjectCannedACLSerializer::class)
     val defaultObjectAcl: ObjectCannedACL = ObjectCannedACL.BUCKET_OWNER_FULL_CONTROL,
 
+    @SerialName("default_bucket_acl")
     @Serializable(with = BucketCannedACLSerializer::class)
     val defaultAcl: BucketCannedACL = BucketCannedACL.PUBLIC_READ,
     val secretKey: String? = null,
@@ -100,6 +116,12 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
     override suspend fun init() {
         val builder = S3Client.builder()
             .region(config.region)
+
+        if (config.enforcePathAccessStyle) {
+            builder.serviceConfiguration {
+                it.pathStyleAccessEnabled()
+            }
+        }
 
         if (config.secretKey != null || config.accessKey != null) {
             builder.credentialsProvider(

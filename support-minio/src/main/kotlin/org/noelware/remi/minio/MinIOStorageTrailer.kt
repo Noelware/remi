@@ -37,7 +37,7 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 /**
- * Represents the configuration for the [MinIOStorageTrailer]. This implements usage with **kotlinx.serializable**
+ * Represents the configuration for the [MinIOStorageTrailer]. This implements usage with **kotlinx.serialization**
  * so you don't have to create boilerplate code for this.
  *
  * @param endpoint The endpoint to connect to MinIO. You can use:
