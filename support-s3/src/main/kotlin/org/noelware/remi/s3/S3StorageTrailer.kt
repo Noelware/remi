@@ -38,6 +38,7 @@ import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.BucketCannedACL
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -279,41 +280,23 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
      * Lists all the contents as a list of [objects][Object].
      */
     override suspend fun listAll(): List<Object> {
-        var done = false
-        val list = mutableListOf<Object>()
-        var request = ListObjectsV2Request.builder()
+        val request = ListObjectsRequest.builder()
             .bucket(config.bucket)
             .build()
 
-        while (!done) {
-            val res = client.listObjectsV2(request)
-
-            for (content in res.contents()) {
-                val name = content.key()
-                val size = content.size()
-                val lastModified = content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault())
-
-                list.add(
-                    Object(
-                        CHECK_WITH,
-                        null,
-                        lastModified,
-                        null,
-                        size,
-                        name
-                    )
-                )
-            }
-
-            if (res.nextContinuationToken() == null) {
-                done = true
-            }
-
-            request = request.toBuilder()
-                .continuationToken(res.continuationToken())
-                .build()
+        val list = mutableListOf<Object>()
+        val objects = client.listObjects(request)
+        for (obj in objects.contents()) {
+            list.add(Object(
+                CHECK_WITH,
+                null,
+                obj.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
+                null,
+                obj.size(),
+                obj.key()
+            ))
         }
 
-        return list.toList()
+        return list
     }
 }

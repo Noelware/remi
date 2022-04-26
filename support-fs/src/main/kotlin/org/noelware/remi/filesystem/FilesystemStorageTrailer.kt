@@ -157,9 +157,6 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                     }
 
                     val contentType = tika.detect(file) ?: "application/octet-stream"
-                    val dirName = "${file.absoluteFile.parentFile}".replace(config.directory, "")
-                    val actualName = if (dirName.isEmpty()) file.name else "$dirName/${file.name}"
-
                     Object(
                         contentType,
                         file.inputStream(),
@@ -170,7 +167,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                             .toLocalDateTime(TimeZone.currentSystemDefault()),
                         file,
                         attributes.size(),
-                        actualName
+                        "$file" // using "$file" will convert the file to the raw path (which we need) :)
                     )
                 }.toList()
         }

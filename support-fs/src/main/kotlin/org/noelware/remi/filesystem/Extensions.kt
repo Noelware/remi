@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+@file:JvmName("RemiFilesystemExtensionsKt")
 package org.noelware.remi.filesystem
 
 import java.io.File
