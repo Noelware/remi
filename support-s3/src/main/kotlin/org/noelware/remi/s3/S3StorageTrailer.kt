@@ -33,6 +33,7 @@ import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
 import org.noelware.remi.s3.serializers.ObjectCannedACLSerializer
 import software.amazon.awssdk.auth.credentials.AwsCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
@@ -132,27 +133,6 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 })
             )
         }
-
-        // Check for JVM arguments
-        val accessKey = try {
-            System.getProperty("aws.accessKey")
-        } catch (e: IllegalArgumentException) {
-            null
-        }
-
-        val secretKey = try {
-            System.getProperty("aws.secretKey")
-        } catch (e: IllegalArgumentException) {
-            null
-        }
-
-        if (accessKey != null && secretKey != null)
-            builder.credentialsProvider(
-                StaticCredentialsProvider.create(object: AwsCredentials {
-                    override fun accessKeyId(): String = accessKey
-                    override fun secretAccessKey(): String = secretKey
-                })
-            )
 
         if (config.endpoint != null) {
             val uri = when (config.provider) {
