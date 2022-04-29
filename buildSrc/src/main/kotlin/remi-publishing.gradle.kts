@@ -18,6 +18,7 @@
  */
 
 import org.noelware.remi.gradle.*
+import java.io.StringReader
 import java.util.Properties
 
 plugins {
@@ -35,6 +36,19 @@ val publishingProps = Properties()
 // and load it.
 if (publishingPropsFile.exists()) {
     publishingProps.load(publishingPropsFile.inputStream())
+} else {
+    // Check if we do in environment variables
+    val accessKey = System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY") ?: ""
+    val secretKey = System.getenv("NOELWARE_PUBLISHING_SECRET_KEY") ?: ""
+
+    if (accessKey.isNotEmpty() && secretKey.isNotEmpty()) {
+        val data = """
+        |s3.accessKey=$accessKey
+        |s3.secretKey=$secretKey
+        """.trimMargin()
+
+        publishingProps.load(StringReader(data))
+    }
 }
 
 // Check if we have the `NOELWARE_PUBLISHING_ACCESS_KEY` and `NOELWARE_PUBLISHING_SECRET_KEY` environment

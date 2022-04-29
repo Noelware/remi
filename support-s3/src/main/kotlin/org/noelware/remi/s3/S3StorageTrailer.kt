@@ -260,23 +260,36 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
      * Lists all the contents as a list of [objects][Object].
      */
     override suspend fun listAll(): List<Object> {
-        val request = ListObjectsRequest.builder()
+        var request = ListObjectsV2Request.builder()
             .bucket(config.bucket)
             .build()
 
         val list = mutableListOf<Object>()
-        val objects = client.listObjects(request)
-        for (obj in objects.contents()) {
-            list.add(Object(
-                CHECK_WITH,
-                null,
-                obj.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
-                null,
-                obj.size(),
-                obj.key()
-            ))
+        while (true) {
+            val objects = client.listObjectsV2(request)
+            for (content in objects.contents()) {
+                val isDir = content.key().split("").last() == "/"
+                if (isDir) continue
+
+                list.add(org.noelware.remi.core.Object(
+                    CHECK_WITH,
+                    null,
+                    content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
+                    null,
+                    content.size(),
+                    content.key()
+                ))
+            }
+
+            if (objects.nextContinuationToken() == null) {
+                break
+            }
+
+            request = request.toBuilder()
+                .continuationToken(objects.nextContinuationToken())
+                .build()
         }
 
-        return list
+        return list.toList()
     }
 }
