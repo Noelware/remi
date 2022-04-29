@@ -33,13 +33,11 @@ import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
 import org.noelware.remi.s3.serializers.ObjectCannedACLSerializer
 import software.amazon.awssdk.auth.credentials.AwsCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.BucketCannedACL
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -271,14 +269,16 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 val isDir = content.key().split("").last() == "/"
                 if (isDir) continue
 
-                list.add(org.noelware.remi.core.Object(
-                    CHECK_WITH,
-                    null,
-                    content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
-                    null,
-                    content.size(),
-                    content.key()
-                ))
+                list.add(
+                    org.noelware.remi.core.Object(
+                        CHECK_WITH,
+                        null,
+                        content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
+                        null,
+                        content.size(),
+                        content.key()
+                    )
+                )
             }
 
             if (objects.nextContinuationToken() == null) {
