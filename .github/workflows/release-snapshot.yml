@@ -35,3 +35,11 @@ jobs:
           NOELWARE_PUBLISHING_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
           NOELWARE_PUBLISHING_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           NOELWARE_PUBLISHING_IS_SNAPSHOT: "true"
+
+      - name: Release to new S3 instance
+        run: ./gradlew publish -Dorg.gradle.s3.endpoint=${{ secrets.S3_ENDPOINT }}
+        env:
+          NOELWARE_PUBLISHING_SECRET_KEY: ${{ secrets.NEW_S3_SECRET_KEY }}
+          NOELWARE_PUBLISHING_ACCESS_KEY: ${{ secrets.NEW_S3_ACCESS_KEY }}
+          NOELWARE_PUBLISHING_IS_SNAPSHOT: "true"
+
