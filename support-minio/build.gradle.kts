@@ -23,5 +23,5 @@ plugins {
 }
 
 dependencies {
-    api("io.minio:minio:8.3.9")
+    api("io.minio:minio:8.4.0")
 }
