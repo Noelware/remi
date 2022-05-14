@@ -19,7 +19,7 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.noelware.remi.gradle.*
-import gay.floof.gradle.utils.*
+import dev.floofy.utils.gradle.*
 
 plugins {
     kotlin("plugin.serialization")

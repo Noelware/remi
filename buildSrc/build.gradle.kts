@@ -23,12 +23,10 @@ plugins {
 }
 
 repositories {
+    maven("https://maven.floofy.dev/repo/releases")
     gradlePluginPortal()
     mavenCentral()
     mavenLocal()
-    maven {
-        url = uri("https://maven.floofy.dev/repo/releases")
-    }
 }
 
 dependencies {
@@ -37,6 +35,6 @@ dependencies {
     implementation(kotlin("gradle-plugin", version = "1.6.21"))
     implementation(kotlin("serialization", version = "1.6.21"))
     implementation("io.kotest:kotest-gradle-plugin:0.3.9")
-    implementation("gay.floof.utils:gradle-utils:1.3.0")
+    implementation("dev.floofy.commons:gradle:2.1.0.1")
     implementation(gradleApi())
 }

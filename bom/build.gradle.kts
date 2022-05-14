@@ -2,6 +2,7 @@
 // https://github.com/kordlib/kord/blob/0.8.x/bom/build.gradle.kts
 
 import org.noelware.remi.gradle.*
+import dev.floofy.utils.gradle.*
 
 plugins {
     `maven-publish`

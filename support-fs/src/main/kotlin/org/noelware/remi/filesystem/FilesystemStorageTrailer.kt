@@ -58,6 +58,12 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     override val name: String = "remi:filesystem"
     private val tika = Tika()
 
+    private fun normalizePath(path: String): String = when {
+        path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
+        path.startsWith("~/") -> System.getProperty("user.home", "/") + path
+        else -> path
+    }
+
     override suspend fun init() {
         val directory = File(config.directory)
         if (!directory.exists()) {
@@ -84,13 +90,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * operation was a success or not.
      */
     override suspend fun delete(path: String): Boolean {
-        val actualPath = when {
-            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
-            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
-            else -> path
-        }
-
-        val file = File(actualPath)
+        val file = File(normalizePath(path))
         return file.ifExists {
             deleteRecursively()
             true
@@ -101,15 +101,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * Checks if the file exists under this storage trailer.
      * @param path The path to find the file.
      */
-    override suspend fun exists(path: String): Boolean {
-        val actualPath = when {
-            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
-            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
-            else -> path
-        }
-
-        return File(actualPath).exists()
-    }
+    override suspend fun exists(path: String): Boolean = File(normalizePath(path)).exists()
 
     /**
      * Uploads file to this storage trailer and returns a [Boolean] result
@@ -120,13 +112,8 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * @param contentType This property is ignored in this storage trailer
      */
     override suspend fun upload(path: String, stream: InputStream, contentType: String): Boolean {
-        val actualPath = when {
-            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
-            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
-            else -> path
-        }
+        val file = File(normalizePath(path))
 
-        val file = File(actualPath)
         withContext(Dispatchers.IO) {
             file.createNewFile()
         }

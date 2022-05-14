@@ -17,7 +17,8 @@
  * limitations under the License.
  */
 
-import org.noelware.remi.gradle.*
+import dev.floofy.utils.gradle.*
+import org.noelware.remi.gradle.VERSION
 import java.io.StringReader
 import java.util.Properties
 
