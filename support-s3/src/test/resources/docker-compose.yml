@@ -24,9 +24,7 @@ services:
       - MINIO_ROOT_PASSWORD=minio
     volumes:
       - minio_data:/data
-    command:
-      - server
-      - /data
+    command: 'server /data'
 
   create_buckets:
     image: alpine:3.15

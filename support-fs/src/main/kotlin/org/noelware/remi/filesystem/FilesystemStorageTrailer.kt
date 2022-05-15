@@ -59,8 +59,15 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     private val tika = Tika()
 
     /**
-     * Returns
+     * Returns the [path] as a "normalized" version:
+     *   - If the [path] starts with `./`, replace `./` with [config.directory][FilesystemStorageConfig.directory]
+     *   - If the [path] starts with `~/`, replace `~/` with system property `user.home` (or `/` by default)
+     *   - If the clauses both fail, do not do anything with the path.
+     *
+     * @param path The path to normalize
+     * @return The normalized path.
      */
+    @Suppress
     fun normalizePath(path: String): String = when {
         path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
         path.startsWith("~/") -> System.getProperty("user.home", "/") + path
