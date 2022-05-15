@@ -1,3 +1,20 @@
+# 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
+# and Amazon S3-compatible server, made in Kotlin!
+#
+# Copyright 2022 Noelware <team@noelware.org>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: Release a new version
 on:
   release:
@@ -30,13 +47,6 @@ jobs:
         run: ./gradlew compileKotlin --no-daemon
 
       - name: Release!
-        run: ./gradlew publish -Dorg.gradle.s3.endpoint=https://s3.wasabisys.com
-        env:
-          NOELWARE_PUBLISHING_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-          NOELWARE_PUBLISHING_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-          NOELWARE_PUBLISHING_IS_SNAPSHOT: "false"
-
-      - name: Release to new S3 instance
         run: ./gradlew publish -Dorg.gradle.s3.endpoint=${{ secrets.S3_ENDPOINT }}
         env:
           NOELWARE_PUBLISHING_SECRET_KEY: ${{ secrets.NEW_S3_SECRET_KEY }}
