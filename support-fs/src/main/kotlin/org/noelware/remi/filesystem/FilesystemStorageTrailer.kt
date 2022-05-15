@@ -58,7 +58,10 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     override val name: String = "remi:filesystem"
     private val tika = Tika()
 
-    private fun normalizePath(path: String): String = when {
+    /**
+     * Returns
+     */
+    fun normalizePath(path: String): String = when {
         path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
         path.startsWith("~/") -> System.getProperty("user.home", "/") + path
         else -> path

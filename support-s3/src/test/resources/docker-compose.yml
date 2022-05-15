@@ -1,0 +1,46 @@
+# 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
+# and Amazon S3-compatible server, made in Kotlin!
+#
+# Copyright 2022 Noelware <team@noelware.org>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: "3.8"
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2022-05-08T23-50-31Z
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio
+    volumes:
+      - minio_data:/data
+    command:
+      - server
+      - /data
+
+  create_buckets:
+    image: alpine:3.15
+    depends_on:
+      - minio
+    entrypoint: >
+      sh -c '
+        apk update && apk add --no-cache grep coreutils &&
+        curl -L -o /usr/local/bin/mc https://dl.min.io/client/mc/release/linux-amd64/mc &&
+        mc config host add s3 http://minio:9000 minio minio &&
+        mc mb -p s3/remi-test &&
+        exit 0
+      '
+
+volumes:
+  minio_data:
+    driver: local
