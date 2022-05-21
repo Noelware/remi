@@ -21,3 +21,7 @@ plugins {
     `remi-publishing`
     `remi-module`
 }
+
+dependencies {
+    implementation("com.google.cloud:google-cloud-storage:2.6.1")
+}

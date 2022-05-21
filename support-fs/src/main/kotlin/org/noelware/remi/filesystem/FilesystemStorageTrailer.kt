@@ -20,6 +20,7 @@
 @file:Suppress("UNUSED")
 package org.noelware.remi.filesystem
 
+import dev.floofy.utils.slf4j.logging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -27,15 +28,16 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
-import org.apache.tika.Tika
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
+import org.noelware.remi.core.figureContentType
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributeView
+import kotlin.io.path.inputStream
 
 /**
  * Represents the configuration of configuring the [FilesystemStorageTrailer].
@@ -56,7 +58,7 @@ fun FilesystemStorageTrailer(directory: String): FilesystemStorageTrailer =
  */
 class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): StorageTrailer<FilesystemStorageConfig> {
     override val name: String = "remi:filesystem"
-    private val tika = Tika()
+    private val log by logging<FilesystemStorageTrailer>()
 
     /**
      * Returns the [path] as a "normalized" version:
@@ -77,6 +79,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     override suspend fun init() {
         val directory = File(config.directory)
         if (!directory.exists()) {
+            log.debug("Directory ${config.directory} didn't exist, creating...")
             directory.mkdirs()
         }
     }
@@ -84,28 +87,15 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     /**
      * Opens a file under the [path] and returns the [InputStream] of the file.
      */
-    override suspend fun open(path: String): InputStream? {
-        val actualPath = when {
-            path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
-            path.startsWith("~/") -> System.getProperty("user.home", "/") + path
-            else -> path
-        }
-
-        val file = File(actualPath)
-        return file.ifExists { inputStream() }
-    }
+    override suspend fun open(path: String): InputStream? = File(normalizePath(path)).ifExists { inputStream() }
 
     /**
      * Deletes the file under the [path] and returns a [Boolean] if the
      * operation was a success or not.
      */
-    override suspend fun delete(path: String): Boolean {
-        val file = File(normalizePath(path))
-        return file.ifExists {
-            deleteRecursively()
-            true
-        } ?: return false
-    }
+    override suspend fun delete(path: String): Boolean = File(normalizePath(path)).ifExists {
+        deleteRecursively(); true
+    } ?: false
 
     /**
      * Checks if the file exists under this storage trailer.
@@ -153,7 +143,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                         }
                     }
 
-                    val contentType = tika.detect(file) ?: "application/octet-stream"
+                    val contentType = figureContentType(it.inputStream())
                     Object(
                         contentType,
                         file.inputStream(),
