@@ -44,7 +44,7 @@ dependencies {
     api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.3.3"))
 
     // kotlinx.coroutines support
-    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.1"))
+    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.2"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
