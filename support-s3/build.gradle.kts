@@ -27,6 +27,6 @@ dependencies {
 
     testApi("org.slf4j:slf4j-api:1.7.36")
     testImplementation("org.slf4j:slf4j-simple:1.7.36")
-    testImplementation("dev.floofy.commons:slf4j:2.1.0.1")
+    testImplementation("dev.floofy.commons:slf4j:2.1.1")
     testImplementation("org.testcontainers:testcontainers:1.17.2")
 }
