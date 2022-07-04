@@ -271,15 +271,17 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                 null
             }
 
-            list.add(Object(
-                if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
-                inputStream,
-                lastModified,
-                null,
-                size,
-                name,
-                "minio://$name"
-            ))
+            list.add(
+                Object(
+                    if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
+                    inputStream,
+                    lastModified,
+                    null,
+                    size,
+                    name,
+                    "minio://$name"
+                )
+            )
         }
 
         return list.toList()
@@ -311,15 +313,17 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                 null
             }
 
-            list.add(Object(
-                if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
-                inputStream,
-                lastModified,
-                null,
-                size,
-                name,
-                "minio://$name"
-            ))
+            list.add(
+                Object(
+                    if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
+                    inputStream,
+                    lastModified,
+                    null,
+                    size,
+                    name,
+                    "minio://$name"
+                )
+            )
         }
 
         return list.toList()
