@@ -42,24 +42,24 @@ dependencies {
     api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.3.3"))
 
     // kotlinx.coroutines support
-    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.1"))
+    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.3"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
     // noel utils
-    implementation("dev.floofy.commons:slf4j:2.1.0.1")
+    implementation("dev.floofy.commons:slf4j:2.1.1")
 
     // SLF4J for logging
     api("org.slf4j:slf4j-api:1.7.36")
 
     // testing utilities
-    testImplementation(platform("io.kotest:kotest-bom:5.3.0"))
+    testImplementation(platform("io.kotest:kotest-bom:5.3.2"))
     testImplementation("io.kotest:kotest-runner-junit5")
     testImplementation("io.kotest:kotest-assertions-core")
     testImplementation("io.kotest:kotest-property")
 
     // Tika (for content type checking)
-    implementation("org.apache.tika:tika-core:2.4.0")
+    implementation("org.apache.tika:tika-core:2.4.1")
 
     if (name.startsWith("support-")) {
         implementation(project(":core"))
