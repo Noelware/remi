@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +15,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("StorageTrailerDefinitionKt")
+@file:JvmName("StorageTrailerDefinitionsKt")
 @file:Suppress("UNUSED")
 package org.noelware.remi.core
 
@@ -31,6 +29,10 @@ interface StorageTrailer<C: Configuration> {
     val config: C
     val name: String
 
+    /**
+     * Initializes a storage trailer, if needed.
+     * @throws IllegalStateException If the storage trailer doesn't support this call.
+     */
     suspend fun init() {
         TODO("Storage trailer $name doesn't support StorageTrailer#init/0")
     }
@@ -68,8 +70,22 @@ interface StorageTrailer<C: Configuration> {
 
     /**
      * Lists all the contents as a list of [objects][Object].
+     * @param includeInputStream If the input stream should be fetched. This is only applicable
+     *                           in the S3 or MinIO storage trailers. The filesystem one just ignores this.
+     *                           This is a property since re-fetching the input stream from the data source
+     *                           can be time-consuming if iterating over a lot of objects.
      */
-    suspend fun listAll(): List<Object>
+    suspend fun listAll(includeInputStream: Boolean = true): List<Object>
+
+    /**
+     * Lists all the contents via a [prefix] to search from.
+     * @param prefix The prefix
+     * @param includeInputStream If the input stream should be fetched. This is only applicable
+     *                           in the S3 or MinIO storage trailers. The filesystem one just ignores this.
+     *                           This is a property since re-fetching the input stream from the data source
+     *                           can be time-consuming if iterating over a lot of objects.
+     */
+    suspend fun list(prefix: String, includeInputStream: Boolean = true): List<Object>
 }
 
 /**

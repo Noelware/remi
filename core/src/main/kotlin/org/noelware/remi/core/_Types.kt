@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -78,7 +76,14 @@ data class Object(
     /**
      * The name of this [Object].
      */
-    val name: String
+    val name: String,
+
+    /**
+     * Returns the path on where this object lives in. The path will be prefixed as:
+     * - `file://` if it was from the Filesystem trailer
+     * - `s3://` if it was from the Amazon S3 or MinIO trailer.
+     */
+    val path: String
 ) {
     /**
      * Returns this [Object]'s input stream from the original file or from the [inputStream] variable.

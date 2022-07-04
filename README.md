@@ -2,10 +2,10 @@
 > *Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!*
 
 ## Why is this built?
-This was built in the mind of [Arisu](https://arisu.land) and [helm-server](https://charts.noelware.org) to store any piece of
+This was built in the mind of [Arisu](https://arisu.land) and [charted](https://charts.noelware.org) to store any piece of
 data into different providers without repeating code and so on, and so forth. This is a simple library to take care of that!
 
-We support any Amazon S3 compatible servers, Google Cloud Storage, and the local filesystem!
+We support any Amazon S3 compatible servers, Google Cloud Storage, MinIO, and the local filesystem!
 
 The library is split into five modules:
 
@@ -16,7 +16,7 @@ The library is split into five modules:
 - [remi-support-s3](./support-s3) - Support for using any compatible Amazon S3 service like Wasabi and MinIO!
 
 ## Installation
-> [:scroll: Documentation](https://docs.noelware.org/libraries/remi) | :eyes: v**0.0.4-SNAPSHOT**
+> [:scroll: Documentation](https://docs.noelware.org/libraries/remi)
 
 ### Gradle
 #### Kotlin DSL

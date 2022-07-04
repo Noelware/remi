@@ -1,6 +1,4 @@
-# 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
-# and Amazon S3-compatible server, made in Kotlin!
-#
+# 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
 # Copyright 2022 Noelware <team@noelware.org>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,15 +58,18 @@ jobs:
   ktlint:
     name: Linting
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [17, 18]
     steps:
       - name: Checks out the repository
         uses: actions/checkout@v3
 
-      - name: Sets up Java 17
+      - name: Sets up Java ${{ matrix.java-version }}
         uses: actions/setup-java@v3
         with:
           distribution: temurin # Eclipse Temurin is <3
-          java-version: 17
+          java-version: ${{ matrix.java-version }}
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -84,6 +85,3 @@ jobs:
 
       - name: Unit test the project
         run: ./gradlew kotest --no-daemon
-        env:
-          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-          S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}

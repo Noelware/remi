@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,10 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.*
 import kotlinx.serialization.*
-import org.noelware.remi.core.CHECK_WITH
-import org.noelware.remi.core.Configuration
-import org.noelware.remi.core.Object
-import org.noelware.remi.core.StorageTrailer
+import org.noelware.remi.core.*
 import org.noelware.remi.s3.serializers.AwsRegionSerializer
 import org.noelware.remi.s3.serializers.BucketCannedACLSerializer
 import org.noelware.remi.s3.serializers.ObjectCannedACLSerializer
@@ -257,7 +252,7 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
     /**
      * Lists all the contents as a list of [objects][Object].
      */
-    override suspend fun listAll(): List<Object> {
+    override suspend fun listAll(includeInputStream: Boolean): List<Object> {
         var request = ListObjectsV2Request.builder()
             .bucket(config.bucket)
             .build()
@@ -269,14 +264,88 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 val isDir = content.key().split("").last() == "/"
                 if (isDir) continue
 
+                val inputStream = if (includeInputStream) {
+                    try {
+                        client.getObject({
+                            it.bucket(config.bucket)
+                            it.key(content.key())
+                        }, ResponseTransformer.toInputStream()) ?: null
+                    } catch (e: Exception) {
+                        if (e.message?.contains("key does not exist") == false)
+                            throw e
+
+                        null
+                    }
+                } else {
+                    null
+                }
+
                 list.add(
-                    org.noelware.remi.core.Object(
-                        CHECK_WITH,
-                        null,
+                    Object(
+                        if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
+                        inputStream,
                         content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
                         null,
                         content.size(),
-                        content.key()
+                        content.key(),
+                        "s3://${content.key()}"
+                    )
+                )
+            }
+
+            if (objects.nextContinuationToken() == null) {
+                break
+            }
+
+            request = request.toBuilder()
+                .continuationToken(objects.nextContinuationToken())
+                .build()
+        }
+
+        return list.toList()
+    }
+
+    /**
+     * Returns all the objects found via a [prefix].
+     */
+    override suspend fun list(prefix: String, includeInputStream: Boolean): List<Object> {
+        var request = ListObjectsV2Request.builder()
+            .bucket(config.bucket)
+            .prefix(prefix)
+            .build()
+
+        val list = mutableListOf<Object>()
+        while (true) {
+            val objects = client.listObjectsV2(request)
+            for (content in objects.contents()) {
+                val isDir = content.key().split("").last() == "/"
+                if (isDir) continue
+
+                val inputStream = if (includeInputStream) {
+                    try {
+                        client.getObject({
+                            it.bucket(config.bucket)
+                            it.key(content.key())
+                        }, ResponseTransformer.toInputStream()) ?: null
+                    } catch (e: Exception) {
+                        if (e.message?.contains("key does not exist") == false)
+                            throw e
+
+                        null
+                    }
+                } else {
+                    null
+                }
+
+                list.add(
+                    Object(
+                        if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
+                        inputStream,
+                        content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
+                        null,
+                        content.size(),
+                        content.key(),
+                        "s3://${content.key()}"
                     )
                 )
             }

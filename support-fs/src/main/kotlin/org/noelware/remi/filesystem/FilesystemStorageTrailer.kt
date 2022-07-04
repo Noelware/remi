@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -130,10 +128,31 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     /**
      * Lists all the contents as a list of [objects][Object].
      */
-    override suspend fun listAll(): List<Object> =
+    override suspend fun listAll(includeInputStream: Boolean): List<Object> = walkInDirectory(config.directory)
+
+    /**
+     * Lists all the objects via the [prefix] selected, this must be a directory,
+     * not a file!
+     *
+     * @param prefix The prefix to use, this will be transformed via the [normalizePath], so you can use
+     *               the `./` and `~/` prefixes.
+     *
+     * @return The [files][Object] found.
+     */
+    override suspend fun list(prefix: String, includeInputStream: Boolean): List<Object> {
+        val normalizedPath = normalizePath(prefix)
+        val file = File(normalizedPath)
+
+        if (!file.isDirectory)
+            throw IllegalStateException("Path $normalizedPath has to be a directory to walk in.")
+
+        return walkInDirectory(normalizedPath)
+    }
+
+    private suspend fun walkInDirectory(directory: String): List<Object> =
         withContext(Dispatchers.IO) {
             Files
-                .walk(Paths.get(config.directory))
+                .walk(Paths.get(directory))
                 .filter(Files::isRegularFile)
                 .map {
                     val file = it.toFile()
@@ -152,9 +171,11 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                             .toInstant()
                             .toKotlinInstant()
                             .toLocalDateTime(TimeZone.currentSystemDefault()),
+
                         file,
                         attributes.size(),
-                        "$file" // using "$file" will convert the file to the raw path (which we need) :)
+                        file.name,
+                        "file://$file"
                     )
                 }.toList()
         }

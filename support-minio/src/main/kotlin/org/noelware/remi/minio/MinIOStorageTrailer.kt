@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.SerialName
-import org.noelware.remi.core.CHECK_WITH
-import org.noelware.remi.core.Configuration
-import org.noelware.remi.core.Object
-import org.noelware.remi.core.StorageTrailer
+import org.noelware.remi.core.*
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URL
@@ -250,7 +245,7 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
     /**
      * Lists all the contents as a list of [objects][Object].
      */
-    override suspend fun listAll(): List<Object> {
+    override suspend fun listAll(includeInputStream: Boolean): List<Object> {
         val objects = client.listObjects(ListObjectsArgs.builder().bucket(config.bucket).recursive(true).build())
         val list = mutableListOf<Object>()
 
@@ -266,17 +261,65 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
             val name = result.objectName()
             val size = result.size()
             val lastModified = result.lastModified().toLocalDateTime().toKotlinLocalDateTime()
+            val inputStream = if (includeInputStream) {
+                try {
+                    open(name)
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
 
-            val obj = Object(
-                CHECK_WITH,
-                null,
+            list.add(Object(
+                if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
+                inputStream,
                 lastModified,
                 null,
                 size,
-                name
-            )
+                name,
+                "minio://$name"
+            ))
+        }
 
-            list.add(obj)
+        return list.toList()
+    }
+
+    override suspend fun list(prefix: String, includeInputStream: Boolean): List<Object> {
+        val objects = client.listObjects(ListObjectsArgs.builder().bucket(config.bucket).recursive(true).prefix(prefix).build())
+        val list = mutableListOf<Object>()
+
+        for (obj in objects) {
+            val result = obj.get()
+
+            // If it is a directory, continue!
+            if (result.isDir) continue
+
+            // If it has a deleted marker, also continue!
+            if (result.isDeleteMarker) continue
+
+            val name = result.objectName()
+            val size = result.size()
+            val lastModified = result.lastModified().toLocalDateTime().toKotlinLocalDateTime()
+            val inputStream = if (includeInputStream) {
+                try {
+                    open(name)
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
+
+            list.add(Object(
+                if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
+                inputStream,
+                lastModified,
+                null,
+                size,
+                name,
+                "minio://$name"
+            ))
         }
 
         return list.toList()

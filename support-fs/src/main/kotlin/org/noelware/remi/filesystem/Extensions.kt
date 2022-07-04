@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,4 +35,11 @@ fun <T> File.ifExists(body: File.() -> T): T? {
     contract { callsInPlace(body, InvocationKind.EXACTLY_ONCE) }
 
     return if (exists()) body() else null
+}
+
+@OptIn(ExperimentalContracts::class)
+fun <T> File.ifNotExists(body: File.() -> T): T? {
+    contract { callsInPlace(body, InvocationKind.EXACTLY_ONCE) }
+
+    return if (!exists()) body() else null
 }

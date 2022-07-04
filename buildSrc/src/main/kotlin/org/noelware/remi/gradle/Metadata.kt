@@ -1,7 +1,5 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage
- * and Amazon S3-compatible server, made in Kotlin!
- *
+ * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
  * Copyright 2022 Noelware <team@noelware.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,5 +20,5 @@ package org.noelware.remi.gradle
 import dev.floofy.utils.gradle.*
 import org.gradle.api.JavaVersion
 
-val VERSION = Version(0, 1, 5, 0, ReleaseType.Beta)
+val VERSION = Version(0, 2, 0, 0, ReleaseType.Beta)
 val JAVA_VERSION = JavaVersion.VERSION_17
