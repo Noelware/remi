@@ -27,7 +27,7 @@ import java.io.InputStream
  * This is the rare case that the content type cannot be checked due to the InputStream not being available. This is
  * used for MinIO, S3, and GCS. The filesystem WILL never use this.
  */
-const val CHECK_WITH = "The content type cannot be checked, please use StorageTrailer.contentType/2 to retrieve it."
+const val CHECK_WITH = "The content type cannot be checked, please use StorageTrailer.figureContentType/1 to retrieve it."
 
 /**
  * Represents the base configuration for constructing a [StorageTrailer].
@@ -55,18 +55,24 @@ data class Object(
      * The raw input stream from the original file or object that was found. This can be null
      * due to object requests for MinIO, S3, and GCS.
      */
-    val inputStream: InputStream?,
+    val inputStream: InputStream? = null,
 
     /**
-     * Represents when this [Object] was created at.
+     * Represents when this [Object] was created at. Depending on the storage trailer,
+     * this can be `null`.
      */
-    val createdAt: LocalDateTime,
+    val createdAt: LocalDateTime? = null,
+
+    /**
+     * Represents when this [Object] was last modified.
+     */
+    val lastModifiedAt: LocalDateTime,
 
     /**
      * Represents the original file that was found. Returns `null` if it was not found, this is
      * usually the case with S3 and Google Cloud Storage. To get the raw bytes, you can use [inputStream]. :)
      */
-    val original: File?,
+    val original: File? = null,
 
     /**
      * Size in bytes how big this [Object] is.
@@ -79,12 +85,23 @@ data class Object(
     val name: String,
 
     /**
+     * Returns the etag of this specific object.
+     */
+    val etag: String,
+
+    /**
      * Returns the path on where this object lives in. The path will be prefixed as:
      * - `file://` if it was from the Filesystem trailer
      * - `s3://` if it was from the Amazon S3 or MinIO trailer.
      */
     val path: String
 ) {
+    /**
+     * Returns if the [etag] is considered weak or not.
+     */
+    val isWeakETag: Boolean
+        get() = etag.startsWith("W/")
+
     /**
      * Returns this [Object]'s input stream from the original file or from the [inputStream] variable.
      */

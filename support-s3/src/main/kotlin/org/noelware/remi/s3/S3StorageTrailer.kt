@@ -33,6 +33,7 @@ import software.amazon.awssdk.core.sync.ResponseTransformer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.BucketCannedACL
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -284,10 +285,12 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                     Object(
                         if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
                         inputStream,
+                        null,
                         content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
                         null,
                         content.size(),
                         content.key(),
+                        content.eTag(),
                         "s3://${content.key()}"
                     )
                 )
@@ -341,10 +344,12 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                     Object(
                         if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
                         inputStream,
+                        null,
                         content.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
                         null,
                         content.size(),
                         content.key(),
+                        content.eTag(),
                         "s3://${content.key()}"
                     )
                 )
@@ -360,5 +365,29 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
         }
 
         return list.toList()
+    }
+
+    override suspend fun fetch(key: String): Object? = fetch(key) {}
+    suspend fun fetch(key: String, builder: GetObjectRequest.Builder.() -> Unit = {}): Object? {
+        val request = GetObjectRequest.builder()
+            .bucket(config.bucket)
+            .key(key)
+            .apply(builder)
+            .build()
+
+        val res = client.getObject(request) ?: return null
+        val obj = res.response()
+
+        return Object(
+            figureContentType(res),
+            res,
+            null,
+            obj.lastModified().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
+            null,
+            obj.contentLength(),
+            key,
+            obj.eTag(),
+            "s3://$key"
+        )
     }
 }

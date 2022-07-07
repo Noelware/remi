@@ -20,8 +20,12 @@ package org.noelware.remi.minio
 import io.minio.*
 import io.minio.errors.MinioException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
 import org.noelware.remi.core.*
 import org.slf4j.LoggerFactory
@@ -77,7 +81,7 @@ fun MinIOStorageTrailer(builder: MinIOStorageConfig.() -> Unit): MinIOStorageTra
 
 class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrailer<MinIOStorageConfig> {
     override val name: String = "remi:minio"
-    lateinit var client: MinioClient
+    lateinit var client: MinioAsyncClient
     private val log = LoggerFactory.getLogger(MinIOStorageTrailer::class.java)
 
     init {
@@ -142,12 +146,12 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
         val accessKey = getAccessKeyFromConfig()
         val secretKey = getSecretKeyFromConfig()
 
-        client = MinioClient.builder()
+        client = MinioAsyncClient.builder()
             .endpoint(URL(endpoint))
             .credentials(accessKey, secretKey)
             .build()
 
-        val found = client.bucketExists(BucketExistsArgs.builder().bucket(config.bucket).build())
+        val found = client.bucketExists(BucketExistsArgs.builder().bucket(config.bucket).build()).await()
         if (!found) {
             log.warn("Bucket '${config.bucket}' doesn't exist, now creating...")
             client
@@ -168,13 +172,12 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
      */
     override suspend fun open(path: String): InputStream? {
         if (!::client.isInitialized) throw IllegalStateException("MinIO client was not constructed, please call `init`.")
-
         return client.getObject(
             GetObjectArgs.builder()
                 .bucket(config.bucket)
                 .`object`(path)
                 .build()
-        )
+        ).await()
     }
 
     /**
@@ -189,7 +192,8 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                     .bucket(config.bucket)
                     .`object`(path)
                     .build()
-            )
+            ).await()
+
             true
         } catch (e: MinioException) {
             false
@@ -207,7 +211,7 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                 .bucket(config.bucket)
                 .`object`(path)
                 .build()
-        )
+        ).await()
 
         return stat.deleteMarker()
     }
@@ -234,7 +238,7 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                     .`object`(path)
                     .stream(stream, size.toLong(), -1)
                     .build()
-            )
+            ).await()
 
             true
         } catch (e: Exception) {
@@ -275,10 +279,12 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                 Object(
                     if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
                     inputStream,
+                    null,
                     lastModified,
                     null,
                     size,
                     name,
+                    result.etag(),
                     "minio://$name"
                 )
             )
@@ -317,15 +323,41 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
                 Object(
                     if (inputStream == null) CHECK_WITH else figureContentType(inputStream),
                     inputStream,
+                    null,
                     lastModified,
                     null,
                     size,
                     name,
+                    result.etag(),
                     "minio://$name"
                 )
             )
         }
 
         return list.toList()
+    }
+
+    override suspend fun fetch(key: String): Object? = fetch(key) {}
+    suspend fun fetch(key: String, builder: GetObjectArgs.Builder.() -> Unit = {}): Object? {
+        val obj = client.getObject(
+            GetObjectArgs.builder()
+                .bucket(config.bucket)
+                .`object`(key)
+                .apply(builder)
+                .build()
+        ).await() ?: return null
+
+        val stat = client.statObject(StatObjectArgs.builder().bucket(config.bucket).`object`(key).build()).await()
+        return Object(
+            figureContentType(obj),
+            obj,
+            null,
+            stat.lastModified().toInstant().toKotlinInstant().toLocalDateTime(TimeZone.currentSystemDefault()),
+            null,
+            stat.size(),
+            key,
+            stat.etag(),
+            "minio://$key"
+        )
     }
 }

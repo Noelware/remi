@@ -26,10 +26,12 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
+import org.apache.commons.io.output.ByteArrayOutputStream
 import org.noelware.remi.core.Configuration
 import org.noelware.remi.core.Object
 import org.noelware.remi.core.StorageTrailer
 import org.noelware.remi.core.figureContentType
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
@@ -149,6 +151,55 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
         return walkInDirectory(normalizedPath)
     }
 
+    /**
+     * Fetches an object from this storage trailer and transforms the metadata to a [Remi Object][Object].
+     * @param key The key to select to find the object.
+     * @return The metadata object or `null` if the object with the specified [key] wasn't found.
+     */
+    override suspend fun fetch(key: String): Object? {
+        val file = File(normalizePath(key))
+        if (file.isDirectory)
+            throw FileIsDirectoryException(normalizePath(key))
+
+        if (!file.exists())
+            return null
+
+        val path = Paths.get(normalizePath(key))
+        val attributes = withContext(Dispatchers.IO) {
+            Files.getFileAttributeView(path, BasicFileAttributeView::class.java).readAttributes()
+        }
+
+        val stream = file.inputStream()
+        val os = ByteArrayOutputStream()
+        withContext(Dispatchers.IO) {
+            stream.transferTo(os)
+        }
+
+        val data = os.toByteArray()
+        val contentType = figureContentType(data)
+        val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
+
+        return Object(
+            contentType,
+            ByteArrayInputStream(data),
+            attributes
+                .creationTime()
+                .toInstant()
+                .toKotlinInstant()
+                .toLocalDateTime(TimeZone.currentSystemDefault()),
+            attributes
+                .lastModifiedTime()
+                .toInstant()
+                .toKotlinInstant()
+                .toLocalDateTime(TimeZone.currentSystemDefault()),
+            file,
+            attributes.size(),
+            file.name,
+            etag,
+            "file://$file"
+        )
+    }
+
     private suspend fun walkInDirectory(directory: String): List<Object> =
         withContext(Dispatchers.IO) {
             Files
@@ -162,19 +213,35 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                         }
                     }
 
-                    val contentType = figureContentType(it.inputStream())
+                    val inputStream = it.inputStream()
+                    val os = ByteArrayOutputStream()
+                    runBlocking {
+                        withContext(Dispatchers.IO) {
+                            inputStream.transferTo(os)
+                        }
+                    }
+
+                    val data = os.toByteArray()
+                    val contentType = figureContentType(data)
+                    val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
+
                     Object(
                         contentType,
-                        file.inputStream(),
+                        inputStream,
                         attributes
                             .creationTime()
                             .toInstant()
                             .toKotlinInstant()
                             .toLocalDateTime(TimeZone.currentSystemDefault()),
-
+                        attributes
+                            .lastModifiedTime()
+                            .toInstant()
+                            .toKotlinInstant()
+                            .toLocalDateTime(TimeZone.currentSystemDefault()),
                         file,
                         attributes.size(),
                         file.name,
+                        etag,
                         "file://$file"
                     )
                 }.toList()

@@ -17,16 +17,25 @@
 
 @file:JvmName("StorageTrailerDefinitionsKt")
 @file:Suppress("UNUSED")
+
 package org.noelware.remi.core
 
 import org.apache.tika.Tika
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 /**
  * Represents a trailer on how to handle storage operations.
  */
 interface StorageTrailer<C: Configuration> {
+    /**
+     * Returns the configuration that the storage trailer was initialized with.
+     */
     val config: C
+
+    /**
+     * The name of the storage trailer.
+     */
     val name: String
 
     /**
@@ -86,11 +95,33 @@ interface StorageTrailer<C: Configuration> {
      *                           can be time-consuming if iterating over a lot of objects.
      */
     suspend fun list(prefix: String, includeInputStream: Boolean = true): List<Object>
+
+    /**
+     * Fetches an object from this storage trailer and transforms the metadata to a [Remi Object][Object].
+     * @param key The key to select to find the object.
+     * @return The metadata object or `null` if the object with the specified [key] wasn't found.
+     */
+    suspend fun fetch(key: String): Object?
 }
 
 /**
- * Returns the content type of [InputStream] using Tika, or `application/octet-stream`,
- * if none was found.
+ * Returns the content type of [InputStream] given using Apache Tika, or it'll default
+ * to `application/octet-stream` if the content type couldn't be found.
+ *
+ * @param stream The input stream to detect the content type
+ * @return The content type itself, defaults to `application/octet-stream` if Apache Tika
+ *         couldn't detect it.
  */
 fun <C: Configuration> StorageTrailer<C>.figureContentType(stream: InputStream): String =
     Tika().detect(stream) ?: "application/octet-stream"
+
+/**
+ * Returns the content type of the bytes given using Apache Tika, or it'll default to
+ * `application/octet-stream` if the content type couldn't be found.
+ *
+ * @param bytes The bytes to transform it into a [ByteArrayInputStream].
+ * @return The content type itself, defaults to `application/octet-stream` if Apache Tika
+ *         couldn't detect it.
+ */
+fun <C: Configuration> StorageTrailer<C>.figureContentType(bytes: ByteArray): String =
+    figureContentType(ByteArrayInputStream(bytes))
