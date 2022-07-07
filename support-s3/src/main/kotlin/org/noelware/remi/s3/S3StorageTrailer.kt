@@ -16,6 +16,7 @@
  */
 
 @file:Suppress("UNUSED")
+
 package org.noelware.remi.s3
 
 import kotlinx.coroutines.Dispatchers
@@ -135,8 +136,9 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 S3Provider.Wasabi -> config.provider.endpoint
             } ?: error("Unable to locate endpoint in the provider or under the 'config.endpoint' option")
 
-            if (uri.isEmpty())
+            if (uri.isEmpty()) {
                 error("the endpoint cannot be empty")
+            }
 
             builder.endpointOverride(URI.create(uri))
         }
@@ -172,8 +174,9 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                 it.key(path)
             }, ResponseTransformer.toInputStream()) ?: return null
         } catch (e: Exception) {
-            if (e.message?.contains("key does not exist") == true)
+            if (e.message?.contains("key does not exist") == true) {
                 return null
+            }
 
             throw e
         }
@@ -272,8 +275,9 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                             it.key(content.key())
                         }, ResponseTransformer.toInputStream()) ?: null
                     } catch (e: Exception) {
-                        if (e.message?.contains("key does not exist") == false)
+                        if (e.message?.contains("key does not exist") == false) {
                             throw e
+                        }
 
                         null
                     }
@@ -331,8 +335,9 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
                             it.key(content.key())
                         }, ResponseTransformer.toInputStream()) ?: null
                     } catch (e: Exception) {
-                        if (e.message?.contains("key does not exist") == false)
+                        if (e.message?.contains("key does not exist") == false) {
                             throw e
+                        }
 
                         null
                     }

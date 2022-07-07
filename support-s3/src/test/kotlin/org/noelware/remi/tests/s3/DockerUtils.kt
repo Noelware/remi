@@ -34,6 +34,8 @@ object DockerUtils {
             .withLogConsumer("minio_1") {
                 log.debug("MINIO SERVER :: ${it.utf8String}")
             }
+
+        // compose.start()
     }
 
     fun destroy() {
@@ -43,8 +45,9 @@ object DockerUtils {
         compose.close()
     }
 
-    fun addressUri(): String? = if (::compose.isInitialized)
+    fun addressUri(): String? = if (::compose.isInitialized) {
         "http://${compose.getServiceHost("minio_1", 9000)}:${compose.getServicePort("minio_1", 9000)}"
-    else
+    } else {
         null
+    }
 }

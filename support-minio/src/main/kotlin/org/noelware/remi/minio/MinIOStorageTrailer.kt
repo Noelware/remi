@@ -94,11 +94,13 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
         val systemEndpoint = System.getProperty("minio.endpoint", "")
         val envEndpoint = System.getenv("MINIO_ENDPOINT") ?: ""
 
-        if (systemEndpoint.isNotEmpty())
+        if (systemEndpoint.isNotEmpty()) {
             return systemEndpoint
+        }
 
-        if (envEndpoint.isNotEmpty())
+        if (envEndpoint.isNotEmpty()) {
             return envEndpoint
+        }
 
         return config.endpoint.ifEmpty {
             throw IllegalStateException("Cannot configure endpoint due to none being present!")
@@ -111,11 +113,13 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
         val systemEndpoint = System.getProperty("minio.accessKey", "")
         val envEndpoint = System.getenv("MINIO_ACCESS_KEY") ?: ""
 
-        if (systemEndpoint.isNotEmpty())
+        if (systemEndpoint.isNotEmpty()) {
             return systemEndpoint
+        }
 
-        if (envEndpoint.isNotEmpty())
+        if (envEndpoint.isNotEmpty()) {
             return envEndpoint
+        }
 
         return config.endpoint.ifEmpty {
             throw IllegalStateException("Cannot configure access key from service account due to none being present!")
@@ -128,11 +132,13 @@ class MinIOStorageTrailer(override val config: MinIOStorageConfig): StorageTrail
         val systemEndpoint = System.getProperty("minio.secretKey", "")
         val envEndpoint = System.getenv("MINIO_SECRET_KEY") ?: ""
 
-        if (systemEndpoint.isNotEmpty())
+        if (systemEndpoint.isNotEmpty()) {
             return systemEndpoint
+        }
 
-        if (envEndpoint.isNotEmpty())
+        if (envEndpoint.isNotEmpty()) {
             return envEndpoint
+        }
 
         return config.endpoint.ifEmpty {
             throw IllegalStateException("Cannot configure secret key from service account due to none being present!")

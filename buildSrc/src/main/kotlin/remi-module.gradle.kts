@@ -74,15 +74,18 @@ spotless {
 
         // We can't use the .editorconfig file, so we'll have to specify it here
         // issue: https://github.com/diffplug/spotless/issues/142
-        // ktlint 0.35.0 (default for Spotless) doesn't support trailing commas
         ktlint()
             .setUseExperimental(true)
-            .userData(mapOf(
-                "no-consecutive-blank-lines" to "true",
-                "no-unit-return" to "true",
+            .editorConfigOverride(mapOf(
+                "indent_size" to "4",
                 "disabled_rules" to "no-wildcard-imports,colon-spacing,annotation-spacing",
+                "ij_kotlin_allow_trailing_comma" to "false",
+                "ktlint_code_style" to "official",
+                "experimental:fun-keyword-spacing" to "true",
+                "experimental:unnecessary-parentheses-before-trailing-lambda" to "true",
+                "no-unit-return" to "true",
+                "no-consecutive-blank-lines" to "true"
             ))
-            .editorConfigOverride(mapOf("indent_size" to "4"))
     }
 }
 

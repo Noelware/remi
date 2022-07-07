@@ -16,6 +16,7 @@
  */
 
 @file:Suppress("UNUSED")
+
 package org.noelware.remi.filesystem
 
 import dev.floofy.utils.slf4j.logging
@@ -147,8 +148,9 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
         val normalizedPath = normalizePath(prefix)
         val file = File(normalizedPath)
 
-        if (!file.isDirectory)
+        if (!file.isDirectory) {
             throw IllegalStateException("Path $normalizedPath has to be a directory to walk in.")
+        }
 
         return walkInDirectory(normalizedPath)
     }
@@ -160,11 +162,13 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      */
     override suspend fun fetch(key: String): Object? {
         val file = File(normalizePath(key))
-        if (file.isDirectory)
+        if (file.isDirectory) {
             throw FileIsDirectoryException(normalizePath(key))
+        }
 
-        if (!file.exists())
+        if (!file.exists()) {
             return null
+        }
 
         val path = Paths.get(normalizePath(key))
         val attributes = withContext(Dispatchers.IO) {
