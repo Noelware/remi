@@ -37,6 +37,8 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributeView
+import java.security.MessageDigest
+import java.util.*
 import kotlin.io.path.inputStream
 
 /**
@@ -246,4 +248,9 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
                     )
                 }.toList()
         }
+
+    private fun sha1(bytes: ByteArray): String {
+        val sha1 = MessageDigest.getInstance("SHA1")
+        return String(Base64.getEncoder().encode(sha1.digest(bytes)))
+    }
 }
