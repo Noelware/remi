@@ -116,8 +116,8 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      */
     override suspend fun upload(path: String, stream: InputStream, contentType: String): Boolean {
         val file = File(normalizePath(path))
-
         withContext(Dispatchers.IO) {
+            Files.createDirectories(Paths.get(normalizePath(path)))
             file.createNewFile()
         }
 
