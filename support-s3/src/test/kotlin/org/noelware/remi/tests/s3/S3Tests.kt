@@ -21,7 +21,6 @@ package org.noelware.remi.tests.s3
 
 import dev.floofy.utils.slf4j.logging
 import io.kotest.assertions.throwables.shouldNotThrow
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
