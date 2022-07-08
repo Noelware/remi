@@ -43,28 +43,28 @@ class RemiFilesystemTests: DescribeSpec({
             trailer.exists("./owo") shouldBe false
         }
 
-        it("should be `true` if `./owo.txt` was created") {
+        it("should be `true` if `./data/owo.txt` was created") {
             val trailer = FilesystemStorageTrailer(directory)
 
             // let's make sure!
-            trailer.exists("./owo.txt") shouldBe false
+            trailer.exists("./data/owo.txt") shouldBe false
 
             val inputStream = ByteArrayInputStream("owo da uwu".toByteArray())
-            val result = trailer.upload("./owo.txt", inputStream, "text/plain; charset=utf-8")
+            val result = trailer.upload("./data/owo.txt", inputStream, "text/plain; charset=utf-8")
 
             result shouldBe true
-            trailer.exists("./owo.txt") shouldBe true
+            trailer.exists("./data/owo.txt") shouldBe true
         }
 
-        it("should be `true` if `./owo.txt` can be deleted") {
+        it("should be `true` if `./data/owo.txt` can be deleted") {
             val trailer = FilesystemStorageTrailer(directory)
 
             // let's make sure!
-            trailer.exists("./owo.txt") shouldBe true
+            trailer.exists("./data/owo.txt") shouldBe true
 
-            val result = trailer.delete("./owo.txt")
+            val result = trailer.delete("./data/owo.txt")
             result shouldBe true
-            trailer.exists("./owo.txt") shouldBe false
+            trailer.exists("./data/owo.txt") shouldBe false
         }
     }
 })

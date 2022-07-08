@@ -117,17 +117,10 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     override suspend fun upload(path: String, stream: InputStream, contentType: String): Boolean {
         val file = File(normalizePath(path))
         withContext(Dispatchers.IO) {
-            // this is probably a bad idea but i will hope it works
-            while (true) {
-                val parent = file.parentFile
-                if (parent.isDirectory) {
-                    if (parent.exists()) {
-                        break
-                    }
-
-                    parent.mkdir()
-                }
-            }
+            // Create the directories of the parent rather than the actual file itself.
+            // This will ensure that the parent directories exists and the #createNewFile()
+            // function will work.
+            Files.createDirectories(Paths.get(file.parent))
 
             file.createNewFile()
         }

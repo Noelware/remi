@@ -18,6 +18,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.noelware.remi.gradle.*
 import dev.floofy.utils.gradle.*
+import io.kotest.gradle.Kotest
+import io.kotest.gradle.KotestPlugin
 
 plugins {
     kotlin("plugin.serialization")
@@ -110,6 +112,11 @@ tasks {
                 }
             }
         }
+    }
+
+    withType<Kotest> {
+        // Do not keep up to date on tests (since we might want to re-run them)
+        outputs.upToDateWhen { false }
     }
 }
 
