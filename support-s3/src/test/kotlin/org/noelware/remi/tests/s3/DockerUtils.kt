@@ -18,36 +18,38 @@
 package org.noelware.remi.tests.s3
 
 import dev.floofy.utils.slf4j.logging
-import org.testcontainers.containers.DockerComposeContainer
-import java.io.File
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
+import org.testcontainers.utility.DockerImageName
+import java.time.Duration
 
 object DockerUtils {
-    private lateinit var compose: DockerComposeContainer<*>
+    private lateinit var container: GenericContainer<*>
     private val log by logging<DockerUtils>()
 
-    fun startMinioServer() {
-        log.info("Starting up MinIO server...")
+    const val IMAGE = "minio/minio:RELEASE.2022-07-08T00-05-23Z"
 
-        compose = DockerComposeContainer(File("src/test/resources/docker-compose.yml"))
-            .withExposedService("minio_1", 9000)
-            .withBuild(true)
-            .withLogConsumer("minio_1") {
-                log.debug("MINIO SERVER :: ${it.utf8String}")
-            }
+    fun startContainer() {
+        log.info("Starting up MinIO container...")
 
-        // compose.start()
+        container = GenericContainer(DockerImageName.parse(IMAGE)).apply {
+            withNetworkAliases("minio-default")
+            addExposedPort(9000)
+            withEnv("MINIO_ROOT_USER", "blehfluff")
+            withEnv("MINIO_ROOT_PASSWORD", "blehfluff")
+            withCommand("server", "/data")
+            setWaitStrategy(HttpWaitStrategy().forPort(9000).forPath("/minio/health/ready").withStartupTimeout(Duration.ofMinutes(2L)))
+        }
+
+        container.start()
     }
 
-    fun destroy() {
-        if (!::compose.isInitialized) return
+    fun destroyContainer() {
+        if (!::container.isInitialized) return
 
-        log.info("Destroying MinIO server...")
-        compose.close()
+        log.warn("Destroying container...")
+        container.stop()
     }
 
-    fun addressUri(): String? = if (::compose.isInitialized) {
-        "http://${compose.getServiceHost("minio_1", 9000)}:${compose.getServicePort("minio_1", 9000)}"
-    } else {
-        null
-    }
+    fun url(): String = "${container.host}:${container.getMappedPort(9000)}"
 }
