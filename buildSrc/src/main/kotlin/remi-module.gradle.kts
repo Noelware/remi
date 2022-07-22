@@ -44,12 +44,12 @@ dependencies {
     api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.3.3"))
 
     // kotlinx.coroutines support
-    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.3"))
+    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
     // noel utils
-    implementation("dev.floofy.commons:slf4j:2.1.1")
+    implementation("dev.floofy.commons:slf4j:2.2.1.1")
 
     // SLF4J for logging
     api("org.slf4j:slf4j-api:1.7.36")
