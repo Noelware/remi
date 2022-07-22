@@ -89,8 +89,9 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
 
         log.info("Using directory $directory to store data!")
         val store = directory.toPath().fileStore()
-        if (store.isReadOnly)
+        if (store.isReadOnly) {
             throw IllegalStateException("Directory $directory can't be readonly.")
+        }
 
         log.info("using drive [${store.name()}] with type [${store.type()}] that has ${store.totalSpace / 1000} bytes of total space, with ${store.usableSpace / 1000} bytes of used space.")
     }
