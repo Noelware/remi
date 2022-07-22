@@ -59,6 +59,7 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5")
     testImplementation("io.kotest:kotest-assertions-core")
     testImplementation("io.kotest:kotest-property")
+    testImplementation("org.slf4j:slf4j-simple:1.7.36")
 
     // Tika (for content type checking)
     implementation("org.apache.tika:tika-core:2.4.1")

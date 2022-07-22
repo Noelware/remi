@@ -40,6 +40,7 @@ import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributeView
 import java.security.MessageDigest
 import java.util.*
+import kotlin.io.path.fileStore
 import kotlin.io.path.inputStream
 
 /**
@@ -85,6 +86,13 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
             log.debug("Directory ${config.directory} didn't exist, creating...")
             directory.mkdirs()
         }
+
+        log.info("Using directory $directory to store data!")
+        val store = directory.toPath().fileStore()
+        if (store.isReadOnly)
+            throw IllegalStateException("Directory $directory can't be readonly.")
+
+        log.info("using drive [${store.name()}] with type [${store.type()}] that has ${store.totalSpace / 1000} bytes of total space, with ${store.usableSpace / 1000} bytes of used space.")
     }
 
     /**
@@ -121,7 +129,6 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
             // This will ensure that the parent directories exists and the #createNewFile()
             // function will work.
             Files.createDirectories(Paths.get(file.parent))
-
             file.createNewFile()
         }
 
@@ -174,7 +181,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
             return null
         }
 
-        val path = Paths.get(normalizePath(key))
+        val path = file.toPath()
         val attributes = withContext(Dispatchers.IO) {
             Files.getFileAttributeView(path, BasicFileAttributeView::class.java).readAttributes()
         }
@@ -207,6 +214,21 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
             file.name,
             etag,
             "file://$file"
+        )
+    }
+
+    /**
+     * Returns the filesystem statistics for the directory that Remi is controlling.
+     * @return The [Stats] object as a Kotlin serializable object via `kotlinx-serialization`.
+     */
+    fun stats(): Stats {
+        val fileStore = File(normalizePath(config.directory)).toPath().fileStore()
+        return Stats(
+            fileStore.unallocatedSpace,
+            fileStore.usableSpace,
+            fileStore.totalSpace,
+            fileStore.name(),
+            fileStore.type()
         )
     }
 

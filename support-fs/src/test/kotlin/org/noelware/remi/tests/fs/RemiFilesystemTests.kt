@@ -39,12 +39,14 @@ class RemiFilesystemTests: DescribeSpec({
     describe("org.noelware.remi.support.fs") {
         it("should be `false` if `./owo` exists") {
             val trailer = FilesystemStorageTrailer(directory)
+            trailer.init()
 
             trailer.exists("./owo") shouldBe false
         }
 
         it("should be `true` if `./data/owo.txt` was created") {
             val trailer = FilesystemStorageTrailer(directory)
+            trailer.init()
 
             // let's make sure!
             trailer.exists("./data/owo.txt") shouldBe false
@@ -58,6 +60,7 @@ class RemiFilesystemTests: DescribeSpec({
 
         it("should be `true` if `./data/owo.txt` can be deleted") {
             val trailer = FilesystemStorageTrailer(directory)
+            trailer.init()
 
             // let's make sure!
             trailer.exists("./data/owo.txt") shouldBe true
