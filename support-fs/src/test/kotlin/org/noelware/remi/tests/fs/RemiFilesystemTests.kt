@@ -37,6 +37,14 @@ class RemiFilesystemTests: DescribeSpec({
     }
 
     describe("org.noelware.remi.support.fs") {
+        it("should expand via #normalizePath") {
+            val trailer = FilesystemStorageTrailer(directory)
+            trailer.init()
+
+            trailer.normalizePath("./owo") shouldBe "${trailer.directory}/owo"
+            trailer.normalizePath("~/uwu") shouldBe "${System.getProperty("user.home", "/")}/uwu"
+        }
+
         it("should be `false` if `./owo` exists") {
             val trailer = FilesystemStorageTrailer(directory)
             trailer.init()

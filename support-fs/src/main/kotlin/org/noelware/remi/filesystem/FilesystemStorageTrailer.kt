@@ -45,7 +45,7 @@ import kotlin.io.path.inputStream
 
 /**
  * Represents the configuration of configuring the [FilesystemStorageTrailer].
- * @param directory A valid, absolute path on where it should be stored.
+ * @param directory A valid, absolute or relative path on where it should be stored.
  */
 @Serializable
 data class FilesystemStorageConfig(val directory: String): Configuration
@@ -65,47 +65,70 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     private val log by logging<FilesystemStorageTrailer>()
 
     /**
+     * Returns the directory as a string.
+     */
+    val directory: String
+        get() = normalizePath(config.directory)
+
+    /**
+     * Returns the directory as a [File].
+     */
+    val directoryAsFile: File
+        get() = Paths.get(config.directory).toFile()
+
+    /**
      * Returns the [path] as a "normalized" version:
      *   - If the [path] starts with `./`, replace `./` with [config.directory][FilesystemStorageConfig.directory]
      *   - If the [path] starts with `~/`, replace `~/` with system property `user.home` (or `/` by default)
      *   - If the clauses both fail, do not do anything with the path.
      *
+     * @deprecated
      * @param path The path to normalize
      * @return The normalized path.
      */
     @Suppress
-    fun normalizePath(path: String): String = when {
-        path.startsWith("./") -> (config.directory + path.replaceFirstChar { "" }).trim()
-        path.startsWith("~/") -> System.getProperty("user.home", "/") + path
-        else -> path
+    fun normalizePath(path: String): String {
+        if (path.startsWith("./")) {
+            if (path == config.directory) {
+                return System.getProperty("user.dir", "/") + path.substring(1)
+            }
+
+            val dirPath = normalizePath(config.directory)
+            return dirPath + path.substring(1)
+        }
+
+        if (path.startsWith("~/")) {
+            return System.getProperty("user.home", "/") + path.substring(1)
+        }
+
+        return path
     }
 
     override suspend fun init() {
         val directory = File(config.directory)
         if (!directory.exists()) {
-            log.debug("Directory ${config.directory} didn't exist, creating...")
+            log.debug("Directory ${normalizePath(config.directory)} didn't exist, creating...")
             directory.mkdirs()
         }
 
-        log.info("Using directory $directory to store data!")
         val store = directory.toPath().fileStore()
         if (store.isReadOnly) {
-            throw IllegalStateException("Directory $directory can't be readonly.")
+            throw IllegalStateException("Directory ${normalizePath(config.directory)} can't be readonly.")
         }
 
-        log.info("using drive [${store.name()}] with type [${store.type()}] that has ${store.totalSpace / 1000} bytes of total space, with ${store.usableSpace / 1000} bytes of used space.")
+        log.info("using directory [${normalizePath(config.directory)}] with drive [${store.name()}], type [${store.type()}] that has ${store.totalSpace / 1000} bytes of total space, with ${store.usableSpace / 1000} bytes of used space.")
     }
 
     /**
      * Opens a file under the [path] and returns the [InputStream] of the file.
      */
-    override suspend fun open(path: String): InputStream? = File(normalizePath(path)).ifExists { inputStream() }
+    override suspend fun open(path: String): InputStream? = Paths.get(config.directory, path).toFile().ifExists { inputStream() }
 
     /**
      * Deletes the file under the [path] and returns a [Boolean] if the
      * operation was a success or not.
      */
-    override suspend fun delete(path: String): Boolean = File(normalizePath(path)).ifExists {
+    override suspend fun delete(path: String): Boolean = Paths.get(config.directory, path).toFile().ifExists {
         deleteRecursively(); true
     } ?: false
 
@@ -113,7 +136,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * Checks if the file exists under this storage trailer.
      * @param path The path to find the file.
      */
-    override suspend fun exists(path: String): Boolean = File(normalizePath(path)).exists()
+    override suspend fun exists(path: String): Boolean = Paths.get(config.directory, path).toFile().exists()
 
     /**
      * Uploads file to this storage trailer and returns a [Boolean] result
@@ -124,7 +147,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * @param contentType This property is ignored in this storage trailer
      */
     override suspend fun upload(path: String, stream: InputStream, contentType: String): Boolean {
-        val file = File(normalizePath(path))
+        val file = Paths.get(config.directory, path).toFile()
         withContext(Dispatchers.IO) {
             // Create the directories of the parent rather than the actual file itself.
             // This will ensure that the parent directories exists and the #createNewFile()
@@ -157,14 +180,12 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * @return The [files][Object] found.
      */
     override suspend fun list(prefix: String, includeInputStream: Boolean): List<Object> {
-        val normalizedPath = normalizePath(prefix)
-        val file = File(normalizedPath)
-
+        val file = Paths.get(config.directory, prefix).toFile()
         if (!file.isDirectory) {
-            throw IllegalStateException("Path $normalizedPath has to be a directory to walk in.")
+            throw IllegalStateException("Path $file has to be a directory to walk in.")
         }
 
-        return walkInDirectory(normalizedPath)
+        return walkInDirectory(file.toString())
     }
 
     /**
@@ -173,49 +194,51 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * @return The metadata object or `null` if the object with the specified [key] wasn't found.
      */
     override suspend fun fetch(key: String): Object? {
-        val file = File(normalizePath(key))
+        val file = Paths.get(config.directory, key).toFile()
         if (file.isDirectory) {
-            throw FileIsDirectoryException(normalizePath(key))
+            throw FileIsDirectoryException(Paths.get(config.directory, key).toString())
         }
 
-        if (!file.exists()) {
-            return null
+        return file.ifExists {
+            val path = toPath()
+            val attributes = runBlocking {
+                withContext(Dispatchers.IO) {
+                    Files.getFileAttributeView(path, BasicFileAttributeView::class.java).readAttributes()
+                }
+            }
+
+            val stream = inputStream()
+            val os = ByteArrayOutputStream()
+            runBlocking {
+                withContext(Dispatchers.IO) {
+                    stream.transferTo(os)
+                }
+            }
+
+            val data = os.toByteArray()
+            val contentType = figureContentType(data)
+            val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
+
+            Object(
+                contentType,
+                ByteArrayInputStream(data),
+                attributes
+                    .creationTime()
+                    .toInstant()
+                    .toKotlinInstant()
+                    .toLocalDateTime(TimeZone.currentSystemDefault()),
+                attributes
+                    .lastModifiedTime()
+                    .toInstant()
+                    .toKotlinInstant()
+                    .toLocalDateTime(TimeZone.currentSystemDefault()),
+                file,
+                attributes.size(),
+                file.name,
+                etag,
+                "file://$file"
+            )
         }
-
-        val path = file.toPath()
-        val attributes = withContext(Dispatchers.IO) {
-            Files.getFileAttributeView(path, BasicFileAttributeView::class.java).readAttributes()
-        }
-
-        val stream = file.inputStream()
-        val os = ByteArrayOutputStream()
-        withContext(Dispatchers.IO) {
-            stream.transferTo(os)
-        }
-
-        val data = os.toByteArray()
-        val contentType = figureContentType(data)
-        val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
-
-        return Object(
-            contentType,
-            ByteArrayInputStream(data),
-            attributes
-                .creationTime()
-                .toInstant()
-                .toKotlinInstant()
-                .toLocalDateTime(TimeZone.currentSystemDefault()),
-            attributes
-                .lastModifiedTime()
-                .toInstant()
-                .toKotlinInstant()
-                .toLocalDateTime(TimeZone.currentSystemDefault()),
-            file,
-            attributes.size(),
-            file.name,
-            etag,
-            "file://$file"
-        )
     }
 
     /**
@@ -223,7 +246,7 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * @return The [Stats] object as a Kotlin serializable object via `kotlinx-serialization`.
      */
     fun stats(): Stats {
-        val fileStore = File(normalizePath(config.directory)).toPath().fileStore()
+        val fileStore = Paths.get(config.directory).fileStore()
         return Stats(
             fileStore.unallocatedSpace,
             fileStore.usableSpace,
