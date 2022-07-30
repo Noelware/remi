@@ -82,7 +82,6 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      *   - If the [path] starts with `~/`, replace `~/` with system property `user.home` (or `/` by default)
      *   - If the clauses both fail, do not do anything with the path.
      *
-     * @deprecated
      * @param path The path to normalize
      * @return The normalized path.
      */
