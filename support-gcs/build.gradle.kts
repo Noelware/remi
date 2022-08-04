@@ -23,5 +23,5 @@ plugins {
 }
 
 dependencies {
-    implementation("com.google.cloud:google-cloud-storage:2.11.0")
+    implementation("com.google.cloud:google-cloud-storage:2.11.1")
 }
