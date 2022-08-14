@@ -318,53 +318,58 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
         val matcher = FileSystems.getDefault().getPathMatcher(glob)
         val objects = mutableListOf<Object>()
 
-        Files.walkFileTree(path, object: SimpleFileVisitor<Path>() {
-            override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-                if (matcher.matches(path)) {
-                    val f = file.toFile()
-                    val inputStream = f.inputStream()
-                    val os = ByteArrayOutputStream()
-                    runBlocking {
-                        withContext(Dispatchers.IO) {
-                            inputStream.transferTo(os)
+        Files.walkFileTree(
+            path,
+            object: SimpleFileVisitor<Path>() {
+                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (matcher.matches(path)) {
+                        val f = file.toFile()
+                        val inputStream = f.inputStream()
+                        val os = ByteArrayOutputStream()
+                        runBlocking {
+                            withContext(Dispatchers.IO) {
+                                inputStream.transferTo(os)
+                            }
                         }
+
+                        val data = os.toByteArray()
+                        val contentType = figureContentType(data)
+                        val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
+
+                        objects.add(
+                            Object(
+                                contentType,
+                                inputStream,
+                                attrs
+                                    .creationTime()
+                                    .toInstant()
+                                    .toKotlinInstant()
+                                    .toLocalDateTime(TimeZone.currentSystemDefault()),
+
+                                attrs
+                                    .lastModifiedTime()
+                                    .toInstant()
+                                    .toKotlinInstant()
+                                    .toLocalDateTime(TimeZone.currentSystemDefault()),
+
+                                f,
+                                attrs.size(),
+                                f.name,
+                                etag,
+                                "file://$f"
+                            )
+                        )
                     }
 
-                    val data = os.toByteArray()
-                    val contentType = figureContentType(data)
-                    val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
-
-                    objects.add(Object(
-                        contentType,
-                        inputStream,
-                        attrs
-                            .creationTime()
-                            .toInstant()
-                            .toKotlinInstant()
-                            .toLocalDateTime(TimeZone.currentSystemDefault()),
-
-                        attrs
-                            .lastModifiedTime()
-                            .toInstant()
-                            .toKotlinInstant()
-                            .toLocalDateTime(TimeZone.currentSystemDefault()),
-
-                        f,
-                        attrs.size(),
-                        f.name,
-                        etag,
-                        "file://$f"
-                    ))
+                    return FileVisitResult.CONTINUE
                 }
 
-                return FileVisitResult.CONTINUE
+                override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+                    log.error("Unable to visit file [$file] with glob pattern [$glob]:", exc)
+                    return FileVisitResult.CONTINUE
+                }
             }
-
-            override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
-                log.error("Unable to visit file [$file] with glob pattern [$glob]:", exc)
-                return FileVisitResult.CONTINUE
-            }
-        })
+        )
 
         return objects.toList()
     }
