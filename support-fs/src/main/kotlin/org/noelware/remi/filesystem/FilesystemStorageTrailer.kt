@@ -34,10 +34,11 @@ import org.noelware.remi.core.StorageTrailer
 import org.noelware.remi.core.figureContentType
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributeView
+import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.util.*
 import kotlin.io.path.fileStore
@@ -174,11 +175,17 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
      * not a file!
      *
      * @param prefix The prefix to use, this will be transformed via the [normalizePath], so you can use
-     *               the `./` and `~/` prefixes.
+     *               the `./` and `~/` prefixes. You can use the `glob:` prefix for globbing
+     *               objects, since it'll use the native FileMatcher.
      *
      * @return The [files][Object] found.
      */
     override suspend fun list(prefix: String, includeInputStream: Boolean): List<Object> {
+        if (prefix.startsWith("glob:")) {
+            val path = Paths.get(config.directory, prefix.substring(0.."glob:".length))
+            return listWithGlob(prefix, path)
+        }
+
         val file = Paths.get(config.directory, prefix).toFile()
         if (!file.isDirectory) {
             throw IllegalStateException("Path $file has to be a directory to walk in.")
@@ -305,5 +312,60 @@ class FilesystemStorageTrailer(override val config: FilesystemStorageConfig): St
     private fun sha1(bytes: ByteArray): String {
         val sha1 = MessageDigest.getInstance("SHA1")
         return String(Base64.getEncoder().encode(sha1.digest(bytes)))
+    }
+
+    private fun listWithGlob(glob: String, path: Path): List<Object> {
+        val matcher = FileSystems.getDefault().getPathMatcher(glob)
+        val objects = mutableListOf<Object>()
+
+        Files.walkFileTree(path, object: SimpleFileVisitor<Path>() {
+            override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                if (matcher.matches(path)) {
+                    val f = file.toFile()
+                    val inputStream = f.inputStream()
+                    val os = ByteArrayOutputStream()
+                    runBlocking {
+                        withContext(Dispatchers.IO) {
+                            inputStream.transferTo(os)
+                        }
+                    }
+
+                    val data = os.toByteArray()
+                    val contentType = figureContentType(data)
+                    val etag = "\"${data.size.toString(16)}-${sha1(data).substring(0..27)}\""
+
+                    objects.add(Object(
+                        contentType,
+                        inputStream,
+                        attrs
+                            .creationTime()
+                            .toInstant()
+                            .toKotlinInstant()
+                            .toLocalDateTime(TimeZone.currentSystemDefault()),
+
+                        attrs
+                            .lastModifiedTime()
+                            .toInstant()
+                            .toKotlinInstant()
+                            .toLocalDateTime(TimeZone.currentSystemDefault()),
+
+                        f,
+                        attrs.size(),
+                        f.name,
+                        etag,
+                        "file://$f"
+                    ))
+                }
+
+                return FileVisitResult.CONTINUE
+            }
+
+            override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+                log.error("Unable to visit file [$file] with glob pattern [$glob]:", exc)
+                return FileVisitResult.CONTINUE
+            }
+        })
+
+        return objects.toList()
     }
 }

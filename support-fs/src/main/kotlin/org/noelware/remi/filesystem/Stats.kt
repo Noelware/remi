@@ -19,16 +19,27 @@ package org.noelware.remi.filesystem
 
 import kotlinx.serialization.SerialName
 
+/**
+ * Represents the statistics of the current disk that the storage
+ * trailer is using.
+ */
 @kotlinx.serialization.Serializable
 data class Stats(
+    /** Returns the unallocated space, in bytes. */
     @SerialName("unallocated_space")
     val unallocatedSpace: Long,
 
+    /** Returns all the usuable space, in bytes */
     @SerialName("usable_space")
     val usableSpace: Long,
 
+    /** The total space the disk has, in bytes. */
     @SerialName("total_space")
     val totalSpace: Long,
+
+    /** The drive that the storage trailer is using. */
     val drive: String,
+
+    /** Represents the type the disk is, i.e, NTFS, ext4, etc. */
     val type: String
 )

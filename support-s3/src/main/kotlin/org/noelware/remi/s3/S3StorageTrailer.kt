@@ -21,6 +21,7 @@ package org.noelware.remi.s3
 
 import dev.floofy.utils.slf4j.logging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.*
 import kotlinx.serialization.*
@@ -44,6 +45,9 @@ import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.URI
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Represents the configuration for the [S3StorageTrailer].
@@ -93,10 +97,16 @@ data class S3StorageConfig(
     @SerialName("enforce_path_access_style")
     var enforcePathAccessStyle: Boolean = false,
 
+    /**
+     * The default ACL for creating new objects.
+     */
     @SerialName("default_object_acl")
     @Serializable(with = ObjectCannedACLSerializer::class)
     var defaultObjectAcl: ObjectCannedACL = ObjectCannedACL.BUCKET_OWNER_FULL_CONTROL,
 
+    /**
+     * THe default ACL for creating the bucket if it doesn't exist.
+     */
     @SerialName("default_bucket_acl")
     @Serializable(with = BucketCannedACLSerializer::class)
     var defaultAcl: BucketCannedACL = BucketCannedACL.PUBLIC_READ,
@@ -114,6 +124,7 @@ fun S3StorageTrailer(config: S3StorageConfig.() -> Unit = {}): S3StorageTrailer 
     S3StorageTrailer(S3StorageConfig().apply(config))
 
 class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3StorageConfig> {
+    private val executorService: ExecutorService = Executors.newCachedThreadPool()
     lateinit var client: S3Client
     override val name: String = "remi:s3"
     private val log by logging<S3StorageTrailer>()
@@ -449,5 +460,24 @@ class S3StorageTrailer(override val config: S3StorageConfig): StorageTrailer<S3S
             obj.eTag(),
             "s3://$key"
         )
+    }
+
+    // Spawns a new executed thread via the executor service to push the load
+    // into a new thread rather than blocking the new thread.
+    private fun <R> withThreaded(
+        timeout: Long,
+        unit: TimeUnit,
+        block: suspend () -> R
+    ): R = try {
+        val fut = executorService.submit {
+            runBlocking {
+                block()
+            }
+        }
+
+        fut.get(timeout, unit) as R
+    } catch (e: Exception) {
+        log.error("Unable to run chunk of code in seperate thread pool:", e)
+        throw e
     }
 }
