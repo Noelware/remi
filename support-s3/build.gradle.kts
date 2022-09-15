@@ -23,7 +23,7 @@ plugins {
 }
 
 dependencies {
-    api("software.amazon.awssdk:s3:2.17.274")
+    api("software.amazon.awssdk:s3:2.17.275")
 
     testApi("org.slf4j:slf4j-api:2.0.1")
     testImplementation("org.slf4j:slf4j-simple:2.0.1")
