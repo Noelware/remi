@@ -26,7 +26,7 @@ dependencies {
     api("software.amazon.awssdk:s3:2.17.283")
 
     testApi("org.slf4j:slf4j-api:2.0.3")
-    testImplementation("org.slf4j:slf4j-simple:2.0.2")
+    testImplementation("org.slf4j:slf4j-simple:2.0.3")
     testImplementation("dev.floofy.commons:slf4j:2.3.0")
     testImplementation("org.testcontainers:testcontainers:1.17.3")
 }
