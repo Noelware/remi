@@ -62,7 +62,7 @@ dependencies {
     testImplementation("org.slf4j:slf4j-simple:2.0.3")
 
     // Tika (for content type checking)
-    implementation("org.apache.tika:tika-core:2.4.1")
+    implementation("org.apache.tika:tika-core:2.5.0")
 
     if (name.startsWith("support-")) {
         implementation(project(":core"))
