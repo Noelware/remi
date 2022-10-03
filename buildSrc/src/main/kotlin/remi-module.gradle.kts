@@ -55,7 +55,7 @@ dependencies {
     api("org.slf4j:slf4j-api:2.0.3")
 
     // testing utilities
-    testImplementation(platform("io.kotest:kotest-bom:5.4.2"))
+    testImplementation(platform("io.kotest:kotest-bom:5.5.0"))
     testImplementation("io.kotest:kotest-runner-junit5")
     testImplementation("io.kotest:kotest-assertions-core")
     testImplementation("io.kotest:kotest-property")
