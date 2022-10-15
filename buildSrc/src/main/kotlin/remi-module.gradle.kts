@@ -41,7 +41,7 @@ repositories {
 dependencies {
     // kotlinx.serialization support
     api("org.jetbrains.kotlinx:kotlinx-serialization-core")
-    api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.4.0"))
+    api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.4.1"))
 
     // kotlinx.coroutines support
     api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4"))
