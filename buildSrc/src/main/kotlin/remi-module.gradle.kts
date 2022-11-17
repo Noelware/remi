@@ -52,7 +52,7 @@ dependencies {
     implementation("dev.floofy.commons:slf4j:2.3.0")
 
     // SLF4J for logging
-    api("org.slf4j:slf4j-api:2.0.3")
+    api("org.slf4j:slf4j-api:2.0.4")
 
     // testing utilities
     testImplementation(platform("io.kotest:kotest-bom:5.5.4"))
