@@ -25,7 +25,7 @@ plugins {
 dependencies {
     api("software.amazon.awssdk:s3:2.17.295")
 
-    testApi("org.slf4j:slf4j-api:2.0.4")
+    testApi("org.slf4j:slf4j-api:2.0.5")
     testImplementation("org.slf4j:slf4j-simple:2.0.4")
     testImplementation("dev.floofy.commons:slf4j:2.3.0")
     testImplementation("org.testcontainers:testcontainers:1.17.6")
