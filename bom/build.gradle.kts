@@ -1,5 +1,25 @@
-// code modified from kord
-// https://github.com/kordlib/kord/blob/0.8.x/bom/build.gradle.kts
+/*
+ * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022 Noelware <team@noelware.org>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 import org.noelware.remi.gradle.*
 import dev.floofy.utils.gradle.*
@@ -13,6 +33,21 @@ val me = project
 rootProject.subprojects {
     if (name != me.name) {
         me.evaluationDependsOn(path)
+    }
+}
+
+dependencies {
+    constraints {
+        rootProject.subprojects.forEach { subproject ->
+            if (subproject.plugins.hasPlugin("maven-publish") && subproject.name != name) {
+                subproject.publishing.publications.withType<MavenPublication> {
+                    if (!artifactId.endsWith("-metadata") && !artifactId.endsWith("-kotlinMultiplatform")) {
+                        println("$groupId:$artifactId:$version")
+                        api("$groupId:$artifactId:$version")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -47,23 +82,9 @@ val snapshotRelease: Boolean = run {
     env == "true"
 }
 
-dependencies {
-    constraints {
-        rootProject.subprojects.forEach { subproject ->
-            if (subproject.plugins.hasPlugin("maven-publish") && subproject.name != name) {
-                subproject.publishing.publications.withType<MavenPublication> {
-                    if (!artifactId.endsWith("-metadata") && !artifactId.endsWith("-kotlinMultiplatform")) {
-                        api("$groupId:$artifactId:$version")
-                    }
-                }
-            }
-        }
-    }
-}
-
 publishing {
     publications {
-        create<MavenPublication>("remi") {
+        create<MavenPublication>("ktor") {
             from(components["javaPlatform"])
 
             artifactId = "remi-bom"
@@ -71,9 +92,9 @@ publishing {
             version = "$VERSION"
 
             pom {
-                description by "Bill of Materials for Remi. :3"
-                name by "remi-bom"
-                url by "https://docs.noelware.org/libs/remi"
+                description by "\uD83E\uDDF6 Robust, and simple Java-based library to handle storage-related communications with different storage provider."
+                name by project.jarFileName
+                url by "https://docs.noelware.org/libraries/java/remi/$VERSION"
 
                 organization {
                     name by "Noelware"
@@ -101,8 +122,8 @@ publishing {
 
                 licenses {
                     license {
-                        name by "Apache-2.0"
-                        url by "http://www.apache.org/licenses/LICENSE-2.0"
+                        name by "MIT"
+                        url by "https://github.com/Noelware/remi/blob/master/LICENSE"
                     }
                 }
 

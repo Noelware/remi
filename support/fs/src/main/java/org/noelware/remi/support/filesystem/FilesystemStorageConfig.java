@@ -21,10 +21,12 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.support.filesystem;
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
+import org.noelware.remi.core.Configuration;
 
-val VERSION = Version(0, 5, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+/**
+ * Represents the configuration for the {@link FilesystemStorageService}.
+ * @param directory The directory of where to look for objects.
+ */
+public record FilesystemStorageConfig(String directory) implements Configuration {}

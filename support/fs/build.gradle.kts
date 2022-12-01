@@ -21,10 +21,11 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+plugins {
+    `remi-module`
+}
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
-
-val VERSION = Version(0, 5, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+dependencies {
+    implementation("org.slf4j:slf4j-api:2.0.5")
+    implementation(project(":core"))
+}

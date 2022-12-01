@@ -1,127 +1,164 @@
 /*
- * 🧶 Remi: Library to handling files for persistent storage with Google Cloud Storage and Amazon S3-compatible server, made in Kotlin!
- * Copyright 2022 Noelware <team@noelware.org>
+ * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022 Noelware <team@noelware.org>
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.noelware.remi.gradle.*
 import dev.floofy.utils.gradle.*
-import io.kotest.gradle.Kotest
-import io.kotest.gradle.KotestPlugin
+import java.io.StringReader
+import java.util.Properties
 
 plugins {
-    kotlin("plugin.serialization")
     id("com.diffplug.spotless")
-    id("org.jetbrains.dokka")
-    id("io.kotest")
-    kotlin("jvm")
+    `maven-publish`
+    `java-library`
+    java
 }
 
 group = "org.noelware.remi"
 version = "$VERSION"
+description = "\uD83E\uDDF6 Remi subproject '$jarFileName' located in [$path]"
 
 repositories {
     mavenCentral()
     mavenLocal()
-    noel()
 }
 
 dependencies {
-    // kotlinx.serialization support
-    api("org.jetbrains.kotlinx:kotlinx-serialization-core")
-    api(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.4.1"))
+    implementation("org.jetbrains:annotations:23.0.0")
 
-    // kotlinx.coroutines support
-    api(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4"))
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
-
-    // noel utils
-    implementation("dev.floofy.commons:slf4j:2.3.0")
-
-    // SLF4J for logging
-    api("org.slf4j:slf4j-api:2.0.5")
-
-    // testing utilities
-    testImplementation(platform("io.kotest:kotest-bom:5.5.4"))
-    testImplementation("io.kotest:kotest-runner-junit5")
-    testImplementation("io.kotest:kotest-assertions-core")
-    testImplementation("io.kotest:kotest-property")
-    testImplementation("org.slf4j:slf4j-simple:2.0.5")
-
-    // Tika (for content type checking)
-    implementation("org.apache.tika:tika-core:2.6.0")
-
-    if (name.startsWith("support-")) {
-        implementation(project(":core"))
-    }
+    // test deps
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.1")
+    testImplementation("org.slf4j:slf4j-simple:2.0.3")
 }
 
 spotless {
-    kotlin {
-        trimTrailingWhitespace()
+    java {
         licenseHeaderFile("${rootProject.projectDir}/assets/HEADING")
+        trimTrailingWhitespace()
+        removeUnusedImports()
+        palantirJavaFormat()
         endWithNewline()
-
-        // We can't use the .editorconfig file, so we'll have to specify it here
-        // issue: https://github.com/diffplug/spotless/issues/142
-        ktlint()
-            .setUseExperimental(true)
-            .editorConfigOverride(mapOf(
-                "indent_size" to "4",
-                "disabled_rules" to "no-wildcard-imports,colon-spacing,annotation-spacing",
-                "ij_kotlin_allow_trailing_comma" to "false",
-                "ktlint_code_style" to "official",
-                "experimental:fun-keyword-spacing" to "true",
-                "experimental:unnecessary-parentheses-before-trailing-lambda" to "true",
-                "no-unit-return" to "true",
-                "no-consecutive-blank-lines" to "true"
-            ))
-    }
-}
-
-tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = JAVA_VERSION.toString()
-        kotlinOptions.javaParameters = true
-        kotlinOptions.freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
-    }
-
-    dokkaHtml {
-        dokkaSourceSets {
-            configureEach {
-                platform.set(org.jetbrains.dokka.Platform.jvm)
-                jdkVersion.set(17)
-                includes.from("DokkaDescription.md")
-
-                sourceLink {
-                    localDirectory.set(file("src/main/kotlin"))
-                    remoteUrl.set(uri("https://github.com/Noelware/remi/tree/master/${project.name}/src/main/kotlin").toURL())
-                    remoteLineSuffix.set("#L")
-                }
-            }
-        }
-    }
-
-    withType<Kotest> {
-        // Do not keep up to date on tests (since we might want to re-run them)
-        outputs.upToDateWhen { false }
     }
 }
 
 java {
     sourceCompatibility = JAVA_VERSION
     targetCompatibility = JAVA_VERSION
+}
+
+tasks {
+    withType<Jar> {
+        manifest {
+            attributes(mapOf(
+                "Implementation-Version" to "$VERSION",
+                "Implementation-Vendor" to "Noelware, LLC. [team@noelware.org]",
+                "Implementation-Title" to project.jarFileName
+            ))
+        }
+    }
+
+    withType<Test>().configureEach {
+        useJUnitPlatform()
+        outputs.upToDateWhen { false }
+        maxParallelForks = Runtime.getRuntime().availableProcessors()
+        failFast = true // kill gradle if a test fails
+
+        testLogging {
+            events.addAll(listOf(
+                TestLogEvent.PASSED,
+                TestLogEvent.FAILED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_OUT,
+                TestLogEvent.STANDARD_ERROR,
+                TestLogEvent.STARTED
+            ))
+
+            exceptionFormat = TestExceptionFormat.FULL
+        }
+    }
+}
+
+// Get the `publishing.properties` file from the `gradle/` directory
+// in the root project.
+val publishingPropsFile = file("${rootProject.projectDir}/gradle/publishing.properties")
+val publishingProps = Properties()
+
+// If the file exists, let's get the input stream
+// and load it.
+if (publishingPropsFile.exists()) {
+    publishingProps.load(publishingPropsFile.inputStream())
+} else {
+    // Check if we do in environment variables
+    val accessKey = System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY") ?: ""
+    val secretKey = System.getenv("NOELWARE_PUBLISHING_SECRET_KEY") ?: ""
+
+    if (accessKey.isNotEmpty() && secretKey.isNotEmpty()) {
+        val data = """
+        |s3.accessKey=$accessKey
+        |s3.secretKey=$secretKey
+        """.trimMargin()
+
+        publishingProps.load(StringReader(data))
+    }
+}
+
+// Check if we have the `NOELWARE_PUBLISHING_ACCESS_KEY` and `NOELWARE_PUBLISHING_SECRET_KEY` environment
+// variables, and if we do, set it in the publishing.properties loader.
+val snapshotRelease: Boolean = run {
+    val env = System.getenv("NOELWARE_PUBLISHING_IS_SNAPSHOT") ?: "false"
+    env == "true"
+}
+
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier by "sources"
+    from(sourceSets.main.get().allSource)
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    description = "Assemble Java documentation with Javadoc"
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+
+    archiveClassifier by "javadoc"
+    from(tasks.javadoc)
+    dependsOn(tasks.javadoc)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("remi") {
+            createPublicationMetadata(project, sourcesJar, javadocJar)
+        }
+    }
+
+    repositories {
+        val url = if (snapshotRelease) "s3://maven.noelware.org/snapshots" else "s3://maven.noelware.org"
+        maven(url) {
+            credentials(AwsCredentials::class.java) {
+                accessKey = publishingProps.getProperty("s3.accessKey") ?: System.getenv("NOELWARE_PUBLISHING_ACCESS_KEY") ?: ""
+                secretKey = publishingProps.getProperty("s3.secretKey") ?: System.getenv("NOELWARE_PUBLISHING_SECRET_KEY") ?: ""
+            }
+        }
+    }
 }

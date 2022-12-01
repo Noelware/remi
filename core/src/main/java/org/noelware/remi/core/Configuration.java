@@ -21,10 +21,9 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.core;
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
-
-val VERSION = Version(0, 5, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+/**
+ * Represents an empty object that represents the configuration object of a specific {@link StorageService}.
+ */
+public interface Configuration {}
