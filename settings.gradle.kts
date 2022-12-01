@@ -26,6 +26,7 @@ rootProject.name = "remi"
 include(
     ":bom",
     ":core",
+    ":serialization",
     ":support:azure",
     ":support:fs",
     ":support:gcs",
