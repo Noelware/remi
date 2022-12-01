@@ -47,9 +47,8 @@ import org.noelware.remi.core.*;
 public class Program {
     public static void main(String[] args) {
         final FilesystemStorageService fsService = new FilesystemStorageService("./path/to/data/to/use");
-        fsService.openAsChannel("./file/to/load/in/given/directory.txt");
-        // This method will return a ByteChannel from the Java NIO APIs, since this is only specific
-        // to the `FilesystemStorageService` class.
+        fsService.open("./file/to/load/in/given/directory.txt");
+        // Opens as a `InputStream`.
     }
 }
 ```
@@ -100,5 +99,8 @@ dependencies {
 You can download the libraries yourself with `curl` or `wget` and link them with **javac**. You can download with the specific URL:
 
 ```http
-https://maven.noelware.org/org/noelware/remi/remi-[package]/[version]/remi-[package]-[version]-sources.jar
+GET https://maven.noelware.org/org/noelware/remi/remi-[package]/[version]/remi-[package]-[version]-sources.jar
 ```
+
+## License
+**Remi** is released with the [**MIT License**](https://github.com/Noelware/remi/blob/master/LICENSE) with love by Noelware. <3
