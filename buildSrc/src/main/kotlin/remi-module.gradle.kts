@@ -49,7 +49,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 
     // noel utils
-    implementation("dev.floofy.commons:slf4j:2.3.0")
+    implementation("dev.floofy.commons:slf4j:2.4.0")
 
     // SLF4J for logging
     api("org.slf4j:slf4j-api:2.0.5")
