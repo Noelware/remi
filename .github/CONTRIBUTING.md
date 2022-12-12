@@ -7,7 +7,7 @@ the conduct is before submitting an issue or Pull Request.
 ## Requirements
 If you wish to tamper with the code, you will need:
 
-- Gradle 7.4.2 (you can see what Gradle version we're using via [gradle.properties](../gradle/wrapper/gradle-wrapper.properties))
+- Gradle 7.6 (you can see what Gradle version we're using via [gradle.properties](../gradle/wrapper/gradle-wrapper.properties))
 - IntelliJ, Eclipse, or Netbeans
 - Java 17 or higher
 
