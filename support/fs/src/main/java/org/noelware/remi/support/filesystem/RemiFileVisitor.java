@@ -23,6 +23,7 @@
 
 package org.noelware.remi.support.filesystem;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -123,23 +124,24 @@ public class RemiFileVisitor extends SimpleFileVisitor<Path> {
             return FileVisitResult.CONTINUE;
         }
 
-        final ByteBuffer buffer = ByteBuffer.allocateDirect((int) attrs.size());
-        try (final FileInputStream stream = new FileInputStream(file.toFile())) {
-            Channels.newChannel(stream).read(buffer);
+        // Create the ByteBuffer of the file content
+        byte[] data;
+        try (final FileInputStream fileChannel = new FileInputStream(file.toFile())) {
+            data = fileChannel.readAllBytes();
         }
 
         // Get the content type of the buffer
-        final String contentType = service.getContentTypeOf(buffer);
+        final String contentType = service.getContentTypeOf(data);
 
         // Create the Etag for this file
-        final byte[] data = buffer.array();
         final String etag =
                 "\"%s-%s\"".formatted(Long.toString(16), service.sha1(data).substring(0, 27));
+
         blobs.add(new Blob(
                 attrs.lastModifiedTime().toInstant(),
                 attrs.creationTime().toInstant(),
                 contentType,
-                buffer,
+                new ByteArrayInputStream(data),
                 etag,
                 name,
                 "fs",
