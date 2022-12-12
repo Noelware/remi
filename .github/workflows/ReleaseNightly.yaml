@@ -48,7 +48,7 @@ jobs:
         run: ./gradlew spotlessCheck --no-daemon
 
       - name: Check if project can be compiled
-        run: ./gradlew compileKotlin --no-daemon
+        run: ./gradlew compileJava --no-daemon
 
       - name: Release!
         run: ./gradlew publish -Dorg.gradle.s3.endpoint=${{ secrets.S3_ENDPOINT }}
