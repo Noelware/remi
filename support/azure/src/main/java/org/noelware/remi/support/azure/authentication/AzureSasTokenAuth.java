@@ -21,9 +21,24 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.core;
+package org.noelware.remi.support.azure.authentication;
 
-/**
- * Represents an empty object that represents the configuration object of a specific {@link StorageService}.
- */
-public interface Configuration {}
+import java.util.Objects;
+
+public class AzureSasTokenAuth implements AzureConnectionAuth {
+    private final String sasToken;
+
+    public AzureSasTokenAuth(String sasToken) {
+        this.sasToken = Objects.requireNonNull(sasToken, "Missing SAS token to connect to Azure");
+    }
+
+    @Override
+    public AzureAuthType authType() {
+        return AzureAuthType.CONNECTION_STRING;
+    }
+
+    @Override
+    public String supply() {
+        return sasToken;
+    }
+}

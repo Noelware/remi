@@ -20,12 +20,13 @@ new Java 17 API, which means you will have to migrate your code, which is fine! 
 ## Supported Providers
 - **Amazon S3**                                                 (via the `org.noelware.remi:remi-storage-s3` Maven coordinate)
 - **Local Filesystem**                                          (via the `org.noelware.remi:remi-storage-fs` Maven coordinate)
-- **Oracle Cloud Infrastructure Object Storage** [experimental] (via the `org.noelware.remi:remi-storage-oracle-cloud` Maven coordinate)
 - **Google Cloud Storage**                       [experimental] (via the `org.noelware.remi:remi-storage-gcs` Maven coordinate)
 - **Azure Blob Storage**                         [experimental] (via the `org.noelware.remi:remi-storage-azure` Maven coordinate)
 
 ## Unsupported Providers
+- **Oracle Cloud Infrastructure Object Storage**
 - **Digital Ocean Spaces**
+  - **Note**: You can use the S3 storage service since it has a S3-compatible API
 - **Alibaba Cloud OSS Storage**
 - **Tencent Cloud COS Storage**
 - **OpenStack Object Storage**

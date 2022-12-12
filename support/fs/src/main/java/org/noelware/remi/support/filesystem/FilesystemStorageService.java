@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@ package org.noelware.remi.support.filesystem;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -128,23 +127,21 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
         final BasicFileAttributes attributes = Files.getFileAttributeView(file.toPath(), BasicFileAttributeView.class)
                 .readAttributes();
 
-        // Create the ByteBuffer of the file content
-        final ByteBuffer buffer = ByteBuffer.allocateDirect((int) attributes.size());
+        byte[] data;
         try (final FileInputStream fileChannel = new FileInputStream(file)) {
-            Channels.newChannel(fileChannel).read(buffer);
+            data = fileChannel.readAllBytes();
         }
 
         // Get the content type of the buffer
-        final String contentType = getContentTypeOf(buffer);
+        final String contentType = getContentTypeOf(data);
 
         // Create the Etag for this file
-        final byte[] data = buffer.array();
         final String etag = "\"%s-%s\"".formatted(Long.toString(16), sha1(data).substring(0, 27));
         return new Blob(
                 attributes.lastModifiedTime().toInstant(),
                 attributes.creationTime().toInstant(),
                 contentType,
-                buffer,
+                new ByteArrayInputStream(data),
                 etag,
                 file.getName(),
                 "fs",
@@ -174,9 +171,9 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
                         }
 
                         // Create the ByteBuffer of the file content
-                        final ByteBuffer buffer = ByteBuffer.allocate((int) attributes.size());
+                        byte[] data;
                         try (final FileInputStream fileChannel = new FileInputStream(file.toFile())) {
-                            Channels.newChannel(fileChannel).read(buffer);
+                            data = fileChannel.readAllBytes();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -184,20 +181,19 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
                         // Get the content type of the buffer
                         final String contentType;
                         try {
-                            contentType = getContentTypeOf(buffer);
+                            contentType = getContentTypeOf(data);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
 
                         // Create the Etag for this file
-                        final byte[] data = buffer.array();
                         final String etag = "\"%s-%s\""
                                 .formatted(Long.toString(16), sha1(data).substring(0, 27));
                         return new Blob(
                                 attributes.lastModifiedTime().toInstant(),
                                 attributes.creationTime().toInstant(),
                                 contentType,
-                                buffer,
+                                new ByteArrayInputStream(data),
                                 etag,
                                 file.toFile().getName(),
                                 "fs",

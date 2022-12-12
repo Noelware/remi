@@ -21,9 +21,22 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.core;
+package org.noelware.remi.support.azure.authentication;
 
 /**
- * Represents an empty object that represents the configuration object of a specific {@link StorageService}.
+ * Represents the connection details to connect to Azure Blob Storage, since Azure has different methods
+ * to do so, this is needed.
  */
-public interface Configuration {}
+public interface AzureConnectionAuth {
+    /**
+     * Represents the {@link AzureAuthType authentication type} to use.
+     * @return {@link AzureAuthType} to use.
+     */
+    AzureAuthType authType();
+
+    /**
+     * The token supplied to connect to Microsoft Azure Blob Storage
+     * @return the token supplied
+     */
+    String supply();
+}

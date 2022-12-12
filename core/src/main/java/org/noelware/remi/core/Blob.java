@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,11 @@
 
 package org.noelware.remi.core;
 
+import static java.lang.String.format;
+
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,12 +35,10 @@ import org.jetbrains.annotations.Nullable;
  * Represents metadata about a file in the specific storage provider.
  */
 public class Blob {
-    private final AtomicBoolean _read = new AtomicBoolean(false);
-
     private final Instant lastModifiedAt;
     private final Instant createdAt;
     private final String contentType;
-    private final ByteBuffer buffer;
+    private final InputStream inputStream;
     private final String etag;
     private final String name;
     private final String path;
@@ -53,7 +50,7 @@ public class Blob {
      * @param lastModifiedAt {@link LocalDateTime} of when this object was last modified at
      * @param createdAt      {@link LocalDateTime} of when this object was created at
      * @param contentType    The <code>Content-Type</code> of this {@link Blob}.
-     * @param buffer         The underlying {@link ByteBuffer} that contains the file contents itself.
+     * @param stream         Inner {@link InputStream} to read from
      * @param etag           The <code>Etag</code> of this {@link Blob}.
      * @param name           object name
      * @param providerName   The {@link StorageService} provider that this {@link Blob} is contained in
@@ -64,7 +61,7 @@ public class Blob {
             Instant lastModifiedAt,
             Instant createdAt,
             String contentType,
-            ByteBuffer buffer,
+            InputStream stream,
             String etag,
             String name,
             String providerName,
@@ -72,8 +69,8 @@ public class Blob {
             long size) {
         this.lastModifiedAt = lastModifiedAt;
         this.contentType = contentType;
+        this.inputStream = stream;
         this.createdAt = createdAt;
-        this.buffer = buffer;
         this.etag = etag;
         this.name = name;
         this.path = String.format("%s://%s", providerName, path);
@@ -81,24 +78,7 @@ public class Blob {
     }
 
     /**
-     * Returns the underlying buffer as an {@link OutputStream}.
-     * @return {@link OutputStream} of the underlying source
-     * @throws IOException if writing to the output stream has failed
-     * @throws IllegalStateException if earlier invocations to {@link #toOutputStream()} was used.
-     */
-    public OutputStream toOutputStream() throws IOException {
-        if (_read.get())
-            throw new IllegalStateException("Blob already has been read from an earlier #toOutputStream invocation.");
-        _read.set(true);
-
-        final ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        Channels.newChannel(stream).write(buffer);
-
-        return stream;
-    }
-
-    /**
-     * Returns the {@link LocalDateTime} of when this object was last modified. Can return <code>null</code>
+     * @return {@link Instant} of when this object was last modified. Can return <code>null</code>
      * if storage implementations don't keep track of this.
      */
     @Nullable
@@ -106,32 +86,77 @@ public class Blob {
         return lastModifiedAt;
     }
 
+    /**
+     * @return {@link Instant} of when this object was first created. Can return <code>null</code>
+     * if any storage implementations don't keep track of it.
+     */
     @Nullable
     public Instant createdAt() {
         return createdAt;
     }
 
+    /**
+     * @return inner <code>Content-Type</code> of the inner {@link #inputStream() input stream}
+     */
     @Nullable
     public String contentType() {
         return contentType;
     }
 
-    @NotNull
-    public ByteBuffer data() {
-        return buffer;
+    /**
+     * @return inner data represented as a {@link InputStream}. can return <code>null</code> if this blob
+     * was ever called for listing, rather than retrieval.
+     */
+    @Nullable
+    public InputStream inputStream() {
+        return inputStream;
     }
 
+    /**
+     * @return object name
+     */
     @NotNull
     public String name() {
         return name;
     }
 
+    /**
+     * @return object path represented as <code>(provider)://(path)</code>, i.e, <code>azure:///some/object</code>
+     */
     @NotNull
     public String path() {
         return path;
     }
 
+    /**
+     * @return etag for this blob
+     */
+    public String etag() {
+        return etag;
+    }
+
+    /**
+     * @return object size
+     */
     public long size() {
         return size;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        final String IDENT = "  ";
+
+        builder.append("org.noelware.remi.core.Blob {\n");
+        builder.append(format(
+                "%slastModifiedAt => %s\n", IDENT, lastModifiedAt != null ? lastModifiedAt.toString() : "(unknown)"));
+        builder.append(format("%scontentType    => %s\n", IDENT, contentType));
+        builder.append(format("%screatedAt      => %s\n", IDENT, createdAt));
+        builder.append(format("%setag           => %s\n", IDENT, etag));
+        builder.append(format("%sname           => %s\n", IDENT, name));
+        builder.append(format("%ssize           => %s\n", IDENT, size));
+        builder.append("}");
+
+        return builder.toString();
     }
 }

@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
 
 package org.noelware.remi.support.azure;
 
+import static java.lang.String.format;
+
 import com.azure.core.util.Context;
 import com.azure.storage.blob.*;
 import com.azure.storage.blob.models.BlobHttpHeaders;
@@ -34,7 +36,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -45,6 +47,8 @@ import org.noelware.remi.core.Blob;
 import org.noelware.remi.core.ListBlobsRequest;
 import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.UploadRequest;
+import org.noelware.remi.support.azure.authentication.AzureConnectionStringAuth;
+import org.noelware.remi.support.azure.authentication.AzureSasTokenAuth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,20 +72,16 @@ public class AzureBlobStorageService implements StorageService<AzureBlobStorageC
      * @return {@link Blob} object if any, or <code>null</code>
      */
     @Override
-    public Blob blob(String path) {
+    public Blob blob(String path) throws IOException {
         final BlobClient client = blobContainerClient.getBlobClient(path);
         if (!client.exists()) return null;
 
         // Get the input stream from the blob client and read into
         // the new allocated ByteBuffer.
         final BlobInputStream stream = client.openInputStream();
-        final ByteBuffer buffer = ByteBuffer.allocate(stream.available());
+        byte[] data;
         try (stream) {
-            try {
-                Channels.newChannel(stream).read(buffer);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            data = stream.readAllBytes();
         }
 
         final String contentType = client.getProperties().getContentType();
@@ -90,7 +90,7 @@ public class AzureBlobStorageService implements StorageService<AzureBlobStorageC
                 client.getProperties().getLastAccessedTime().toInstant(),
                 client.getProperties().getCreationTime().toInstant(),
                 contentType,
-                buffer,
+                new ByteArrayInputStream(data),
                 etag,
                 client.getBlobName(),
                 "azure",
@@ -133,10 +133,10 @@ public class AzureBlobStorageService implements StorageService<AzureBlobStorageC
             // Get the input stream from the blob client and read into
             // the new allocated ByteBuffer.
             final BlobInputStream stream = client.openInputStream();
-            final ByteBuffer buffer = ByteBuffer.allocate(stream.available());
+            byte[] data;
             try (stream) {
                 try {
-                    Channels.newChannel(stream).read(buffer);
+                    data = stream.readAllBytes();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -144,12 +144,15 @@ public class AzureBlobStorageService implements StorageService<AzureBlobStorageC
 
             final String contentType = client.getProperties().getContentType();
             final String etag = client.getProperties().getETag();
+            final OffsetDateTime lastAccessed = client.getProperties().getLastAccessedTime();
 
             return new Blob(
-                    client.getProperties().getLastAccessedTime().toInstant(),
+                    lastAccessed != null
+                            ? client.getProperties().getLastAccessedTime().toInstant()
+                            : null,
                     client.getProperties().getCreationTime().toInstant(),
                     contentType,
-                    buffer,
+                    new ByteArrayInputStream(data),
                     etag,
                     item.getName(),
                     "azure",
@@ -285,10 +288,22 @@ public class AzureBlobStorageService implements StorageService<AzureBlobStorageC
         if (blobContainerClient != null && blobServiceClient != null) return;
 
         LOG.info("Initializing Azure services client with endpoint [{}]", config.endpoint());
-        blobServiceClient = new BlobServiceClientBuilder()
-                .endpoint(String.format("https://%s", config.endpoint()))
-                .sasToken(config.token())
-                .buildClient();
+        final BlobServiceClientBuilder builder =
+                new BlobServiceClientBuilder().endpoint(format("https://%s", config.endpoint()));
+
+        if (config.auth() instanceof AzureConnectionStringAuth) {
+            LOG.info(format(
+                    "Using connection string [%s] as authentication",
+                    "*".repeat(config.auth().supply().length())));
+            builder.connectionString(config.auth().supply());
+        } else if (config.auth() instanceof AzureSasTokenAuth) {
+            LOG.info(format(
+                    "Using generated SAS token [%s] as authentication",
+                    "*".repeat(config.auth().supply().length())));
+            builder.sasToken(config.auth().supply());
+        }
+
+        blobServiceClient = builder.buildClient();
 
         blobContainerClient = blobServiceClient.getBlobContainerClient(config.containerName());
         LOG.info("Attempting to create container [{}] if it doesn't exist...", config.containerName());

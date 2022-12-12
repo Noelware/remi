@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ package org.noelware.remi.support.azure;
 import java.io.Serializable;
 import org.jetbrains.annotations.NotNull;
 import org.noelware.remi.core.Configuration;
+import org.noelware.remi.support.azure.authentication.AzureConnectionAuth;
 
 /**
  * Represents the configuration for the {@link AzureBlobStorageService}.
@@ -33,35 +34,30 @@ import org.noelware.remi.core.Configuration;
 public class AzureBlobStorageConfig implements Serializable, Configuration {
     private final String containerName;
     private final String endpoint;
-    private final String sasToken;
+    private final AzureConnectionAuth auth;
 
     /**
      * Creates a new {@link AzureBlobStorageConfig} object.
      *
      * @param containerName The name of the container to use for the storage service.
      * @param endpoint The endpoint URL to use. If this doesn't end with <code>.blob.core.windows.net</code>,
-     *                 the {@link #endpoint()} method will do it for  you.
-     *
-     * @param sasToken The token to use for authenticating to Azure Blob Storage. Refer to the <a href="https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/storage/azure-storage-blob/README.md#authenticate-the-client">official Java SDK for Azure Blob Storage</a>
+     *                 the {@link #endpoint()} method will do it for you.
      */
-    public AzureBlobStorageConfig(@NotNull String containerName, @NotNull String endpoint, @NotNull String sasToken) {
+    public AzureBlobStorageConfig(
+            @NotNull String containerName, @NotNull String endpoint, @NotNull AzureConnectionAuth auth) {
         this.containerName = containerName;
         this.endpoint = endpoint;
-        this.sasToken = sasToken;
+        this.auth = auth;
     }
 
     @NotNull
     public String endpoint() {
-        if (!endpoint.endsWith(".blob.core.windows.net")) {
-            return String.format("%s.blob.core.windows.net", endpoint);
-        }
-
         return endpoint;
     }
 
     @NotNull
-    public String token() {
-        return sasToken;
+    public AzureConnectionAuth auth() {
+        return auth;
     }
 
     @NotNull

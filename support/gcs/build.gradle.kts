@@ -26,5 +26,6 @@ plugins {
 }
 
 dependencies {
+    api("com.google.cloud:google-cloud-storage:2.16.0")
     implementation(project(":core"))
 }
