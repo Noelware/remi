@@ -43,7 +43,7 @@ on:
       - 'renovate.json'
 jobs:
   spotless:
-    name: Spotless [${{matrix.runner}}, Java ${{matrix.java-version}}]
+    name: Spotless [Java ${{matrix.java-version}}]
     runs-on: ubuntu-latest
     strategy:
       matrix:
