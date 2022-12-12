@@ -103,7 +103,7 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
      *
      * @param request The request options object, if <code>null</code> was provided, then all the blobs in this
      *                storage service will be retrieved, which might take a while if not using pagination.
-     * @return A {@link List <Blob> list of blobs} received from the {@link ListBlobsRequest request}.
+     * @return A {@link List<Blob> list of blobs} received from the {@link ListBlobsRequest request}.
      */
     @Override
     public List<Blob> blobs(@Nullable ListBlobsRequest request) throws IOException {
