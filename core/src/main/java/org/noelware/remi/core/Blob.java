@@ -58,14 +58,14 @@ public class Blob {
      * @param size           The size of this blob.
      */
     public Blob(
-            Instant lastModifiedAt,
-            Instant createdAt,
-            String contentType,
-            InputStream stream,
-            String etag,
-            String name,
-            String providerName,
-            String path,
+            @Nullable Instant lastModifiedAt,
+            @Nullable Instant createdAt,
+            @Nullable String contentType,
+            @Nullable InputStream stream,
+            @Nullable String etag,
+            @NotNull String name,
+            @NotNull String providerName,
+            @NotNull String path,
             long size) {
         this.lastModifiedAt = lastModifiedAt;
         this.contentType = contentType;
@@ -131,6 +131,7 @@ public class Blob {
     /**
      * @return etag for this blob
      */
+    @Nullable
     public String etag() {
         return etag;
     }

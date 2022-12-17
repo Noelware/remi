@@ -135,15 +135,12 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
         // Get the content type of the buffer
         final String contentType = getContentTypeOf(data);
 
-        // Create the Etag for this file
-        final String etag =
-                "\"%s-%s\"".formatted(Long.toString(data.length, 16), sha1(data).substring(0, 27));
         return new Blob(
                 attributes.lastModifiedTime().toInstant(),
                 attributes.creationTime().toInstant(),
                 contentType,
                 new ByteArrayInputStream(data),
-                etag,
+                null,
                 file.getName(),
                 "fs",
                 String.format("fs://%s", file),
@@ -187,18 +184,12 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
                             throw new RuntimeException(e);
                         }
 
-                        // Create the Etag for this file
-                        final String etag = "\"%s-%s\""
-                                .formatted(
-                                        Long.toString(data.length, 16),
-                                        sha1(data).substring(0, 27));
-
                         return new Blob(
                                 attributes.lastModifiedTime().toInstant(),
                                 attributes.creationTime().toInstant(),
                                 contentType,
                                 new ByteArrayInputStream(data),
-                                etag,
+                                null,
                                 file.toFile().getName(),
                                 "fs",
                                 String.format("fs://%s", file),
