@@ -26,6 +26,7 @@ import org.noelware.remi.gradle.*
 
 plugins {
     `maven-publish`
+    `java-library`
     java
 }
 
@@ -39,7 +40,6 @@ repositories {
 
 tasks {
     wrapper {
-        version = "7.5-rc-4"
         distributionType = ALL
     }
 }

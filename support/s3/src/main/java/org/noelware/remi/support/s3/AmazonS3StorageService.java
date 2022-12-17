@@ -73,10 +73,17 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
     @Override
     public Blob blob(String path) throws IOException {
         final String prefixed = toPrefixedString(path);
-        final ResponseInputStream<GetObjectResponse> resp = client.getObject((builder) -> {
-            builder.bucket(config.bucket());
-            builder.key(prefixed);
-        });
+        LOG.info("Finding blob with path [{}]", prefixed);
+
+        ResponseInputStream<GetObjectResponse> resp;
+        try {
+            resp = client.getObject((builder) -> {
+                builder.bucket(config.bucket());
+                builder.key(prefixed);
+            });
+        } catch (NoSuchKeyException ignored) {
+            return null;
+        }
 
         byte[] data;
         try (final InputStream stream = resp) {
@@ -106,11 +113,11 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
      * @return A {@link List<Blob> list of blobs} received from the {@link ListBlobsRequest request}.
      */
     @Override
-    public List<Blob> blobs(@Nullable ListBlobsRequest request) throws IOException {
+    public List<Blob> blobs(@Nullable ListBlobsRequest request) {
         if (request == null) {
             final ArrayList<Blob> blobs = new ArrayList<>();
             ListObjectsV2Request.Builder builder =
-                    ListObjectsV2Request.builder().maxKeys(100).bucket(config.bucket());
+                    ListObjectsV2Request.builder().maxKeys(1000).bucket(config.bucket());
 
             if (config.prefix() != null) {
                 builder.prefix(config.prefix());
@@ -124,7 +131,7 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
                                 try {
                                     return fromS3Object(obj);
                                 } catch (IOException e) {
-                                    LOG.error(format("Unable to get object [%s]:", obj.key()), e);
+                                    LOG.warn(format("Unable to get object [%s], skipping!", obj.key()), e);
                                     return null;
                                 }
                             })
@@ -271,12 +278,16 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
      */
     @Override
     public @Nullable InputStream open(String path) {
-        return client.getObject(
-                (builder) -> {
-                    builder.bucket(config.bucket());
-                    builder.key(toPrefixedString(path));
-                },
-                ResponseTransformer.toInputStream());
+        try {
+            return client.getObject(
+                    (builder) -> {
+                        builder.bucket(config.bucket());
+                        builder.key(toPrefixedString(path));
+                    },
+                    ResponseTransformer.toInputStream());
+        } catch (NoSuchKeyException ignored) {
+            return null;
+        }
     }
 
     /**
