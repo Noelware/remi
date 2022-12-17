@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,5 +26,5 @@ package org.noelware.remi.gradle
 import org.gradle.api.JavaVersion
 import dev.floofy.utils.gradle.*
 
-val VERSION = Version(0, 5, 0, 0, ReleaseType.Snapshot)
+val VERSION = Version(0, 5, 1, 0, ReleaseType.Beta)
 val JAVA_VERSION = JavaVersion.VERSION_17

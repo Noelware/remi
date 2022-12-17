@@ -232,16 +232,15 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
      * @param request The request options object
      * @throws IOException If any I/O exceptions had occurred while uploading the file.
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void upload(UploadRequest request) throws IOException {
-        final InputStream stream = request.inputStream();
         final String path = request.path();
-
         final File file = Paths.get(config.directory(), path).toFile();
         Files.createDirectories(Paths.get(file.getParent()));
         file.createNewFile();
 
-        try (stream;
+        try (final InputStream stream = request.inputStream();
                 final FileOutputStream out = new FileOutputStream(file)) {
             byte[] buf = new byte[stream.available()];
             int len;
@@ -338,7 +337,7 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
     public void init() {
         final File directory = new File(config.directory());
         if (!directory.exists()) {
-            LOG.debug("Directory [{}] does not exist on local disk, creating!", normalizePath(config.directory()));
+            LOG.debug("Directory [{}] does not exist on local disk, creating!", config.directory());
             directory.mkdirs();
         }
 

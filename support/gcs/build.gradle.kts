@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,5 +27,4 @@ plugins {
 
 dependencies {
     api("com.google.cloud:google-cloud-storage:2.16.0")
-    implementation(project(":core"))
 }

@@ -163,34 +163,12 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
             final ListObjectsV2Response resp = client.listObjectsV2(listObjectsV2Request);
             try (final Stream<S3Object> stream = resp.contents().parallelStream()) {
                 final List<Blob> newBlobs = stream.map(obj -> {
-                            if (obj.key().endsWith("/")) return null;
-
-                            byte[] data;
-                            try (final InputStream s = open(obj.key())) {
-                                assert s != null;
-                                data = s.readAllBytes();
+                            try {
+                                return fromS3Object(obj);
                             } catch (IOException e) {
+                                // Do we throw or return null? I have no idea to be honest...
                                 throw new RuntimeException(e);
                             }
-
-                            String contentType;
-                            try {
-                                contentType = getContentTypeOf(data);
-                            } catch (IOException e) {
-                                // fallback
-                                contentType = "application/octet-stream";
-                            }
-
-                            return new Blob(
-                                    obj.lastModified(),
-                                    null,
-                                    contentType,
-                                    new ByteArrayInputStream(data),
-                                    obj.eTag(),
-                                    toPrefixedString(obj.key()),
-                                    "s3",
-                                    format("s3://%s", toPrefixedString(obj.key())),
-                                    obj.size());
                         })
                         .filter(Objects::nonNull)
                         .toList();
@@ -226,6 +204,7 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
      */
     @Override
     public void upload(UploadRequest request) throws IOException {
+        LOG.debug("Uploading object in path [{}] with content type [{}]", request.path(), request.contentType());
         try (final InputStream stream = request.inputStream()) {
             if (stream.available() == 0)
                 throw new IllegalStateException(
@@ -258,7 +237,11 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
                 builder.key(toPrefixedString(path));
             });
 
-            return !resp.deleteMarker();
+            final Boolean deleteMarker = resp.deleteMarker();
+            if (deleteMarker != null) return !deleteMarker;
+
+            // assume it is true
+            return true;
         } catch (NoSuchKeyException ignored) {
             return false;
         }
@@ -430,6 +413,8 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
     @Nullable
     private Blob fromS3Object(S3Object obj) throws IOException {
         if (obj.key().endsWith("/")) return null;
+
+        LOG.debug("");
         return blob(obj.key());
     }
 }

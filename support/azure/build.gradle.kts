@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,4 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.17.6")
 
     api("com.azure:azure-storage-blob:12.20.1")
-    implementation("org.slf4j:slf4j-api:2.0.5")
-    implementation(project(":core"))
 }

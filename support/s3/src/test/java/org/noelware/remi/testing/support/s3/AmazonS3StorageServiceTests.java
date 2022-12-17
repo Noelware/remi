@@ -26,22 +26,30 @@ package org.noelware.remi.testing.support.s3;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.noelware.remi.core.Blob;
+import org.noelware.remi.core.UploadRequest;
 import org.noelware.remi.support.s3.AmazonS3StorageConfig;
 import org.noelware.remi.support.s3.AmazonS3StorageService;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers(disabledWithoutDocker = true)
 public class AmazonS3StorageServiceTests {
+    private static final AtomicReference<AmazonS3StorageService> service = new AtomicReference<>(null);
     private static final GenericContainer<?> minioContainer = new GenericContainer<>(
                     DockerImageName.parse("quay.io/minio/minio:RELEASE.2022-12-07T00-56-37Z"))
             .withExposedPorts(9000, 9090)
@@ -53,6 +61,12 @@ public class AmazonS3StorageServiceTests {
                     "MINIO_SECRET_KEY", "remitest"));
 
     private void withAmazonS3StorageService(Consumer<AmazonS3StorageService> serviceConsumer) {
+        final AmazonS3StorageService s3Service = service.get();
+        if (s3Service != null) {
+            serviceConsumer.accept(s3Service);
+            return;
+        }
+
         final AmazonS3StorageConfig config = AmazonS3StorageConfig.builder()
                 .withAccessKeyId("remitest")
                 .withSecretAccessKey("remitest")
@@ -61,9 +75,11 @@ public class AmazonS3StorageServiceTests {
                 .withEndpoint(format("http://%s:%d", minioContainer.getHost(), minioContainer.getMappedPort(9000)))
                 .build();
 
-        final AmazonS3StorageService service = new AmazonS3StorageService(config);
-        service.init();
-        serviceConsumer.accept(service);
+        final AmazonS3StorageService newS3Service = new AmazonS3StorageService(config);
+        newS3Service.init();
+
+        service.set(newS3Service);
+        serviceConsumer.accept(newS3Service);
     }
 
     @BeforeAll
@@ -72,6 +88,8 @@ public class AmazonS3StorageServiceTests {
                 .forPath("/minio/health/ready")
                 .forPort(9000)
                 .withStartupTimeout(Duration.ofMinutes(2)));
+
+        minioContainer.setLogConsumers(List.of(new Slf4jLogConsumer(LoggerFactory.getLogger("io.minio.docker"))));
         minioContainer.start();
     }
 
@@ -82,6 +100,68 @@ public class AmazonS3StorageServiceTests {
             final List<Blob> blobs = assertDoesNotThrow(() -> service.blobs());
 
             assertEquals(0, blobs.size());
+        });
+    }
+
+    @Test
+    public void test_canWeUploadObjects() {
+        withAmazonS3StorageService(service -> {
+            assertFalse(service.exists("/wuff.json"));
+            assertDoesNotThrow(() -> service.upload(UploadRequest.builder()
+                    .withPath("/wuff.json")
+                    .withInputStream(new ByteArrayInputStream("{\"wuffs\":true}".getBytes(StandardCharsets.UTF_8)))
+                    .withContentType("application/json")
+                    .build()));
+
+            assertTrue(service.exists("/wuff.json"));
+            assertDoesNotThrow(() -> {
+                final List<Blob> blobs = service.blobs();
+                assertEquals(1, blobs.size());
+
+                final Blob wuffBlob = service.blob("/wuff.json");
+                assertNotNull(wuffBlob);
+                assertEquals("application/json", wuffBlob.contentType());
+
+                try (final InputStream stream = wuffBlob.inputStream()) {
+                    assert stream != null;
+
+                    final String content = new String(stream.readAllBytes());
+                    assertEquals("{\"wuffs\":true}", content);
+                }
+            });
+        });
+    }
+
+    @Test
+    public void test_canWeVUploadAndFetch1000And100000Items() {
+        withAmazonS3StorageService(service -> {
+            assertDoesNotThrow(() -> {
+                assertEquals(1, service.blobs().size());
+
+                for (int i = 0; i < 1000; i++) {
+                    final int key = i + 1;
+                    assertDoesNotThrow(() -> service.upload(UploadRequest.builder()
+                            .withPath(format("/test/%d.json", key))
+                            .withInputStream(new ByteArrayInputStream(
+                                    format("{\"key\":%d,\"wuffs\":true}", key).getBytes(StandardCharsets.UTF_8)))
+                            .withContentType("application/json")
+                            .build()));
+                }
+
+                assertEquals(1001, service.blobs().size());
+
+                for (int i = 1000; i < 99999; i++) {
+                    final int key = i + 1;
+                    assertDoesNotThrow(() -> service.upload(UploadRequest.builder()
+                            .withPath(format("/test/%d.json", key))
+                            .withInputStream(new ByteArrayInputStream(
+                                    format("{\"key\":%d,\"wuffs\":true}", key).getBytes(StandardCharsets.UTF_8)))
+                            .withContentType("application/json")
+                            .build()));
+                }
+
+                assertEquals(100000, service.blobs().size());
+            });
         });
     }
 }

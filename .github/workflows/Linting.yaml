@@ -66,6 +66,9 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
 
+      - name: Upload Google Credentials in ~/.google-creds.json
+        run: echo "${{secrets.GOOGLE_CREDENTIALS_JSON}}" >> ~/.google-creds.json
+
       - name: Lint code-base with Spotless
         uses: gradle/gradle-build-action@v2
         with:
@@ -75,3 +78,8 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: compileJava --no-daemon --scan
+
+      - name: Run all unit tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test --no-daemon --scan

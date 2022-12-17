@@ -84,7 +84,7 @@ val snapshotRelease: Boolean = run {
 
 publishing {
     publications {
-        create<MavenPublication>("ktor") {
+        create<MavenPublication>("remi") {
             from(components["javaPlatform"])
 
             artifactId = "remi-bom"

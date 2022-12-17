@@ -1,6 +1,6 @@
 /*
  * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022 Noelware <team@noelware.org>
+ * Copyright (c) 2022-2023 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,11 +46,16 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains:annotations:23.0.0")
+    implementation("org.slf4j:slf4j-api:2.0.6")
 
     // test deps
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.1")
-    testImplementation("org.slf4j:slf4j-simple:2.0.3")
+    testImplementation("org.slf4j:slf4j-simple:2.0.6")
+
+    if (path.startsWith(":support")) {
+        implementation(project(":core"))
+    }
 }
 
 spotless {
