@@ -136,7 +136,8 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
         final String contentType = getContentTypeOf(data);
 
         // Create the Etag for this file
-        final String etag = "\"%s-%s\"".formatted(Long.toString(data.length, 16), sha1(data).substring(0, 27));
+        final String etag =
+                "\"%s-%s\"".formatted(Long.toString(data.length, 16), sha1(data).substring(0, 27));
         return new Blob(
                 attributes.lastModifiedTime().toInstant(),
                 attributes.creationTime().toInstant(),
@@ -188,7 +189,9 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
 
                         // Create the Etag for this file
                         final String etag = "\"%s-%s\""
-                                .formatted(Long.toString(data.length, 16), sha1(data).substring(0, 27));
+                                .formatted(
+                                        Long.toString(data.length, 16),
+                                        sha1(data).substring(0, 27));
 
                         return new Blob(
                                 attributes.lastModifiedTime().toInstant(),
