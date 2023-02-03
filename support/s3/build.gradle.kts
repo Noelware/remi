@@ -29,5 +29,5 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.17.6")
     testImplementation("org.testcontainers:junit-jupiter:1.17.6")
 
-    api("software.amazon.awssdk:s3:2.19.30")
+    api("software.amazon.awssdk:s3:2.19.31")
 }
