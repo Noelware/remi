@@ -27,5 +27,5 @@ plugins {
 
 dependencies {
     // Tika (for content type checking)
-    api("org.apache.tika:tika-core:2.6.0")
+    api("org.apache.tika:tika-core:2.7.0")
 }
