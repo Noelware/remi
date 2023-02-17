@@ -22,6 +22,7 @@ new Java 17 API, which means you will have to migrate your code, which is fine! 
 - **Local Filesystem**                                          (via the `org.noelware.remi:remi-storage-fs` Maven coordinate)
 - **Google Cloud Storage**                       [experimental] (via the `org.noelware.remi:remi-storage-gcs` Maven coordinate)
 - **Azure Blob Storage**                         [experimental] (via the `org.noelware.remi:remi-storage-azure` Maven coordinate)
+- **MongoDB GridFS**                             [experimental] (via the `org.noelware.remi:remi-storage-gridfs` Maven coordinate)
 
 ## Unsupported Providers
 - **Oracle Cloud Infrastructure Object Storage**

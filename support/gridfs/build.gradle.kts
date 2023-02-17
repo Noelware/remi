@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,3 +21,10 @@
  * SOFTWARE.
  */
 
+plugins {
+    `remi-module`
+}
+
+dependencies {
+    api("org.mongodb:mongo-java-driver:3.12.12")
+}

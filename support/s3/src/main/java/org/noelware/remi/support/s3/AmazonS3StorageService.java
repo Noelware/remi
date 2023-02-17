@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Blob;
@@ -56,7 +54,6 @@ import software.amazon.awssdk.services.s3.model.*;
 public class AmazonS3StorageService implements StorageService<AmazonS3StorageConfig> {
     private final Logger LOG = LoggerFactory.getLogger(AmazonS3StorageService.class);
     private final AmazonS3StorageConfig config;
-    private final Tika TIKA = new Tika();
     private S3Client client;
 
     public AmazonS3StorageService(AmazonS3StorageConfig config) {
@@ -287,38 +284,6 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
                     ResponseTransformer.toInputStream());
         } catch (NoSuchKeyException ignored) {
             return null;
-        }
-    }
-
-    /**
-     * Returns the content type of this {@link InputStream}.
-     * @param stream The stream to check the content type of
-     */
-    @Override
-    public @Nullable String getContentTypeOf(InputStream stream) throws IOException {
-        return TIKA.detect(stream);
-    }
-
-    /**
-     * Returns the content type of the given byte contents.
-     * @param bytes Byte array to use
-     */
-    @Override
-    public @Nullable String getContentTypeOf(byte[] bytes) throws IOException {
-        try (final ByteArrayInputStream stream = new ByteArrayInputStream(bytes)) {
-            return getContentTypeOf(stream);
-        }
-    }
-
-    /**
-     * Returns the content type of this {@link ByteBuffer}.
-     * @param buffer {@link ByteBuffer} to use.
-     */
-    @Override
-    public @Nullable String getContentTypeOf(ByteBuffer buffer) throws IOException {
-        // We need to convert the ByteBuffer into a InputStream.
-        try (final ByteArrayInputStream stream = new ByteArrayInputStream(buffer.array())) {
-            return getContentTypeOf(stream);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
  * Copyright (c) 2022 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy

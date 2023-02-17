@@ -21,10 +21,35 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.core.contenttype;
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import org.jetbrains.annotations.Nullable;
 
-val VERSION = Version(0, 6, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+/**
+ * Represents a resolver for resolving content types.
+ */
+public interface ContentTypeResolver {
+    /**
+     * Returns the content type of this {@link InputStream}.
+     * @param stream The stream to check the content type of
+     */
+    @Nullable
+    String resolve(InputStream stream) throws IOException;
+
+    /**
+     * Returns the content type of the given byte contents.
+     * @param bytes Byte array to use
+     */
+    @Nullable
+    String resolve(byte[] bytes) throws IOException;
+
+    /**
+     * Returns the content type of this {@link ByteBuffer}.
+     * @param buffer {@link ByteBuffer} to use.
+     */
+    @Nullable
+    String resolve(ByteBuffer buffer) throws IOException;
+}

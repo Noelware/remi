@@ -21,10 +21,56 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.gridfs;
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.noelware.remi.core.*;
 
-val VERSION = Version(0, 6, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+public class GridfsStorageService implements StorageService<Configuration.None> {
+    @Override
+    public Blob blob(String path) throws IOException {
+        return null;
+    }
+
+    @Override
+    public List<Blob> blobs(@Nullable ListBlobsRequest request) throws IOException {
+        return null;
+    }
+
+    @Override
+    public List<Blob> blobs() throws IOException {
+        return null;
+    }
+
+    @Override
+    public void upload(UploadRequest request) throws IOException {}
+
+    @Override
+    public boolean exists(String path) {
+        return false;
+    }
+
+    @Override
+    public boolean delete(String path) throws IOException {
+        return false;
+    }
+
+    @Override
+    public @Nullable InputStream open(String path) {
+        return null;
+    }
+
+    @Override
+    public @NotNull String name() {
+        return "remi:gridfs";
+    }
+
+    @Override
+    public @NotNull Configuration.None config() {
+        return new Configuration.None();
+    }
+}

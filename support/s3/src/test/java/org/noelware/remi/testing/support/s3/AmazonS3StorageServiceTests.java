@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,7 @@ import org.testcontainers.utility.DockerImageName;
 public class AmazonS3StorageServiceTests {
     private static final AtomicReference<AmazonS3StorageService> service = new AtomicReference<>(null);
     private static final GenericContainer<?> minioContainer = new GenericContainer<>(
-                    DockerImageName.parse("quay.io/minio/minio:RELEASE.2022-12-07T00-56-37Z"))
+                    DockerImageName.parse("quay.io/minio/minio:RELEASE.2023-02-10T18-48-39Z"))
             .withExposedPorts(9000, 9090)
             .withCommand("server", "/data")
             .withEnv(Map.of(

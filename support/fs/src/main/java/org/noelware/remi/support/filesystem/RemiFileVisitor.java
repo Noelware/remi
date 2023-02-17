@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -129,7 +129,7 @@ public class RemiFileVisitor extends SimpleFileVisitor<Path> {
         }
 
         // Get the content type of the buffer
-        final String contentType = service.getContentTypeOf(data);
+        final String contentType = service.contentTypeResolver.resolve(data);
 
         // Create the Etag for this file
         final String etag =

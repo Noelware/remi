@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,20 @@
 package org.noelware.remi.support.filesystem;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Base64;
 import java.util.List;
-import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Blob;
 import org.noelware.remi.core.ListBlobsRequest;
 import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.UploadRequest;
+import org.noelware.remi.core.contenttype.ContentTypeResolver;
+import org.noelware.remi.core.contenttype.TikaContentTypeResolver;
+import org.noelware.remi.support.filesystem.stats.FilesystemStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +45,9 @@ import org.slf4j.LoggerFactory;
  * Represents an implementation of the {@link StorageService} for the local filesystem
  */
 public class FilesystemStorageService implements StorageService<FilesystemStorageConfig> {
+    protected final ContentTypeResolver contentTypeResolver = new TikaContentTypeResolver();
     private final FilesystemStorageConfig config;
     private final Logger LOG = LoggerFactory.getLogger(FilesystemStorageService.class);
-    private final Tika TIKA = new Tika();
 
     /**
      * Initializes a new {@link FilesystemStorageService}.
@@ -98,14 +99,14 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
     }
 
     /**
-     * Returns the absolute path of the {@link FilesystemStorageConfig#directory() directory} configured.
+     * @return the absolute path of the {@link FilesystemStorageConfig#directory() directory} configured.
      */
     public String directory() {
         return normalizePath(config.directory());
     }
 
     /**
-     * Same as {@link #directory()} but as an {@link File}.
+     * @return Same as {@link #directory()} but as an {@link File}.
      */
     public File directoryAsFile() {
         return new File(directory());
@@ -133,8 +134,7 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
         }
 
         // Get the content type of the buffer
-        final String contentType = getContentTypeOf(data);
-
+        final String contentType = contentTypeResolver.resolve(data);
         return new Blob(
                 attributes.lastModifiedTime().toInstant(),
                 attributes.creationTime().toInstant(),
@@ -179,7 +179,7 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
                         // Get the content type of the buffer
                         final String contentType;
                         try {
-                            contentType = getContentTypeOf(data);
+                            contentType = contentTypeResolver.resolve(data);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -212,7 +212,6 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
 
     /**
      * Refer to {@link #blobs(ListBlobsRequest)} on how this method works.
-     *
      * @return A {@link List<Blob> list of blobs}
      */
     @Override
@@ -294,38 +293,6 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
     }
 
     /**
-     * Returns the content type of this {@link InputStream}.
-     * @param stream The stream to check the content type of
-     */
-    @Override
-    public @Nullable String getContentTypeOf(InputStream stream) throws IOException {
-        return TIKA.detect(stream);
-    }
-
-    /**
-     * Returns the content type of the given byte contents.
-     * @param bytes Byte array to use
-     */
-    @Override
-    public @Nullable String getContentTypeOf(byte[] bytes) throws IOException {
-        try (final ByteArrayInputStream stream = new ByteArrayInputStream(bytes)) {
-            return getContentTypeOf(stream);
-        }
-    }
-
-    /**
-     * Returns the content type of this {@link ByteBuffer}.
-     * @param buffer {@link ByteBuffer} to use.
-     */
-    @Override
-    public @Nullable String getContentTypeOf(ByteBuffer buffer) throws IOException {
-        // We need to convert the ByteBuffer into a InputStream.
-        try (final ByteArrayInputStream stream = new ByteArrayInputStream(buffer.array())) {
-            return getContentTypeOf(stream);
-        }
-    }
-
-    /**
      * This method initializes this {@link StorageService}, if necessary.
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -354,7 +321,7 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
     }
 
     /**
-     * Returns the name of this {@link StorageService}.
+     * @return the name of this {@link StorageService}.
      */
     @Override
     public @NotNull String name() {
@@ -362,11 +329,18 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
     }
 
     /**
-     * Returns the configuration object of this {@link StorageService}.
+     * @return the configuration object of this {@link StorageService}.
      */
     @Override
     public @NotNull FilesystemStorageConfig config() {
         return config;
+    }
+
+    /**
+     * @return {@link FilesystemStats statistics} about the storage service
+     */
+    public @NotNull FilesystemStats stats() {
+        return new FilesystemStats(this);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -376,7 +350,7 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
         final File[] contents = file.listFiles();
         if (contents == null) {
             LOG.debug("File content [{}] couldn't list files", file);
-            return Files.deleteIfExists(file.toPath());
+            return Files.deleteIfExists(file.toPath().toRealPath());
         }
 
         if (contents.length == 0) return deleteDir(file);

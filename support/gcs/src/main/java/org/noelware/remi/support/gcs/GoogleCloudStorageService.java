@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,10 +30,8 @@ import com.google.cloud.storage.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Blob;
@@ -46,7 +44,6 @@ import org.slf4j.LoggerFactory;
 public class GoogleCloudStorageService implements StorageService<GoogleCloudStorageConfig> {
     private final Logger LOG = LoggerFactory.getLogger(GoogleCloudStorageService.class);
     private final GoogleCloudStorageConfig config;
-    private final Tika TIKA = new Tika();
     private Storage storage;
     private Bucket bucket;
 
@@ -144,26 +141,6 @@ public class GoogleCloudStorageService implements StorageService<GoogleCloudStor
         if (!blob.exists()) return null;
 
         return new ByteArrayInputStream(blob.getContent());
-    }
-
-    @Override
-    public @Nullable String getContentTypeOf(InputStream stream) throws IOException {
-        return TIKA.detect(stream);
-    }
-
-    @Override
-    public @Nullable String getContentTypeOf(byte[] bytes) throws IOException {
-        try (final ByteArrayInputStream stream = new ByteArrayInputStream(bytes)) {
-            return getContentTypeOf(stream);
-        }
-    }
-
-    @Override
-    public @Nullable String getContentTypeOf(ByteBuffer buffer) throws IOException {
-        // We need to convert the ByteBuffer into a InputStream.
-        try (final ByteArrayInputStream stream = new ByteArrayInputStream(buffer.array())) {
-            return getContentTypeOf(stream);
-        }
     }
 
     @Override

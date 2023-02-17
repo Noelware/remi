@@ -1,5 +1,5 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
  * Copyright (c) 2022 Noelware <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,6 +27,7 @@ plugins {
 
 repositories {
     maven("https://maven.floofy.dev/repo/releases")
+    maven("https://maven.noelware.org")
     gradlePluginPortal()
     mavenCentral()
     mavenLocal()
@@ -34,6 +35,7 @@ repositories {
 
 dependencies {
     implementation("com.diffplug.spotless:spotless-plugin-gradle:6.15.0")
+    implementation("org.noelware.gradle:gradle-infra-plugin:1.1.1")
     implementation("dev.floofy.commons:gradle:2.5.0")
     implementation(gradleApi())
 }

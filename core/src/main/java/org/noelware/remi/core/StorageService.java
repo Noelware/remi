@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@ package org.noelware.remi.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -86,27 +85,6 @@ public interface StorageService<C extends Configuration> {
      */
     @Nullable
     InputStream open(String path);
-
-    /**
-     * Returns the content type of this {@link InputStream}.
-     * @param stream The stream to check the content type of
-     */
-    @Nullable
-    String getContentTypeOf(InputStream stream) throws IOException;
-
-    /**
-     * Returns the content type of the given byte contents.
-     * @param bytes Byte array to use
-     */
-    @Nullable
-    String getContentTypeOf(byte[] bytes) throws IOException;
-
-    /**
-     * Returns the content type of this {@link ByteBuffer}.
-     * @param buffer {@link ByteBuffer} to use.
-     */
-    @Nullable
-    String getContentTypeOf(ByteBuffer buffer) throws IOException;
 
     /**
      * This method does the initialization part, if necessary.

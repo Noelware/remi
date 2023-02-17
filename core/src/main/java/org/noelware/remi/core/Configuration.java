@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,4 +26,10 @@ package org.noelware.remi.core;
 /**
  * Represents an empty object that represents the configuration object of a specific {@link StorageService}.
  */
-public interface Configuration {}
+public interface Configuration {
+    /**
+     * Represents a {@link Configuration} that doesn't have any options
+     * to be configured.
+     */
+    class None implements Configuration {}
+}

@@ -1,6 +1,6 @@
 /*
- * 🧶 Remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
- * Copyright (c) 2022-2023 Noelware <team@noelware.org>
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,17 +37,10 @@ val Project.jarFileName: String
 
 fun MavenPublication.createPublicationMetadata(
     project: Project,
-    sourcesJar: TaskProvider<Jar>,
-    javadocJar: TaskProvider<Jar>
 ) {
-    from(project.components.getByName("java"))
-
     groupId = "org.noelware.remi"
     artifactId = "remi-${project.jarFileName}"
     version = "$VERSION"
-
-    artifact(sourcesJar.get())
-    artifact(javadocJar.get())
 
     pom {
         description by "\uD83E\uDDF6 Robust, and simple Java-based library to handle storage-related communications with different storage provider."

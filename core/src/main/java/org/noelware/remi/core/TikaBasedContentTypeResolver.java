@@ -21,10 +21,39 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.core;
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import org.apache.tika.Tika;
+import org.jetbrains.annotations.Nullable;
 
-val VERSION = Version(0, 6, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+/**
+ * Represents a resolver for resolving content-types with Apache Tika.
+ * @param <C> The configuration class
+ */
+public abstract class TikaBasedContentTypeResolver<C extends Configuration> implements StorageService<C> {
+    private final Tika TIKA = new Tika();
+
+    @Override
+    public @Nullable String getContentTypeOf(InputStream stream) throws IOException {
+        return TIKA.detect(stream);
+    }
+
+    @Override
+    public @Nullable String getContentTypeOf(byte[] bytes) throws IOException {
+        try (final ByteArrayInputStream stream = new ByteArrayInputStream(bytes)) {
+            return getContentTypeOf(stream);
+        }
+    }
+
+    @Override
+    public @Nullable String getContentTypeOf(ByteBuffer buffer) throws IOException {
+        // We need to convert the ByteBuffer into a InputStream.
+        try (final ByteArrayInputStream stream = new ByteArrayInputStream(buffer.array())) {
+            return getContentTypeOf(stream);
+        }
+    }
+}

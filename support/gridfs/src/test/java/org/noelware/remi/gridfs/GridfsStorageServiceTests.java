@@ -21,10 +21,6 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.gradle
+package org.noelware.remi.gridfs;
 
-import org.gradle.api.JavaVersion
-import dev.floofy.utils.gradle.*
-
-val VERSION = Version(0, 6, 0, 0, ReleaseType.Beta)
-val JAVA_VERSION = JavaVersion.VERSION_17
+public class GridfsStorageServiceTests {}
