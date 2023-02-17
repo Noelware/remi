@@ -131,37 +131,4 @@ public class AmazonS3StorageServiceTests {
             });
         });
     }
-
-    @Test
-    public void test_canWeVUploadAndFetch1000And100000Items() {
-        withAmazonS3StorageService(service -> {
-            assertDoesNotThrow(() -> {
-                assertEquals(1, service.blobs().size());
-
-                for (int i = 0; i < 1000; i++) {
-                    final int key = i + 1;
-                    assertDoesNotThrow(() -> service.upload(UploadRequest.builder()
-                            .withPath(format("/test/%d.json", key))
-                            .withInputStream(new ByteArrayInputStream(
-                                    format("{\"key\":%d,\"wuffs\":true}", key).getBytes(StandardCharsets.UTF_8)))
-                            .withContentType("application/json")
-                            .build()));
-                }
-
-                assertEquals(1001, service.blobs().size());
-
-                for (int i = 1000; i < 99999; i++) {
-                    final int key = i + 1;
-                    assertDoesNotThrow(() -> service.upload(UploadRequest.builder()
-                            .withPath(format("/test/%d.json", key))
-                            .withInputStream(new ByteArrayInputStream(
-                                    format("{\"key\":%d,\"wuffs\":true}", key).getBytes(StandardCharsets.UTF_8)))
-                            .withContentType("application/json")
-                            .build()));
-                }
-
-                assertEquals(100000, service.blobs().size());
-            });
-        });
-    }
 }

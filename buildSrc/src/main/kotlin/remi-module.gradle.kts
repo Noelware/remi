@@ -21,6 +21,8 @@
  * SOFTWARE.
  */
 
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.noelware.infra.gradle.*
 import org.noelware.remi.gradle.*
 import dev.floofy.utils.gradle.*
@@ -81,6 +83,22 @@ tasks {
                 "Implementation-Vendor" to "Noelware, LLC. [team@noelware.org]",
                 "Implementation-Title" to project.jarFileName
             ))
+        }
+    }
+
+    withType<Test>().configureEach {
+        useJUnitPlatform()
+        outputs.upToDateWhen { false }
+
+        maxParallelForks = Runtime.getRuntime().availableProcessors()
+        failFast = true
+
+        testLogging {
+            events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.STANDARD_ERROR, TestLogEvent.STANDARD_OUT, TestLogEvent.STARTED)
+
+            showCauses = true
+            showExceptions = true
+            exceptionFormat = TestExceptionFormat.FULL
         }
     }
 }

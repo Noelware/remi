@@ -27,6 +27,7 @@ import static java.lang.String.format;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.NoCredentials;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,17 +37,22 @@ import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Configuration;
 
 public class GoogleCloudStorageConfig implements Configuration {
+    @Nullable
     private final File credentialsFile;
+
     private final String bucketName;
     private final String projectId;
+    private final String hostName;
 
     public static GoogleCloudStorageConfig fromSystemProperty(
             @NotNull String bucket, @NotNull String projectId, @Nullable String sysProp) {
         final String credentialsPath = Objects.requireNonNull(
                 System.getProperty(sysProp != null ? sysProp : "-Dcom.google.storage.credentialsFile"));
+
         final File credentialsFile = new File(credentialsPath);
         if (!credentialsFile.exists())
             throw new IllegalStateException(format("Path [%s] doesn't exist", credentialsPath));
+
         if (!credentialsFile.isFile())
             throw new IllegalStateException(format("Path [%s] was not a file", credentialsPath));
 
@@ -57,22 +63,34 @@ public class GoogleCloudStorageConfig implements Configuration {
             @NotNull String bucket, @NotNull String projectId, @Nullable String envVar) {
         final String credentialsPath =
                 Objects.requireNonNull(System.getenv(envVar != null ? envVar : "GOOGLE_APPLICATION_CREDENTIALS"));
+
         final File credentialsFile = new File(credentialsPath);
         if (!credentialsFile.exists())
             throw new IllegalStateException(format("Path [%s] doesn't exist", credentialsPath));
+
         if (!credentialsFile.isFile())
             throw new IllegalStateException(format("Path [%s] was not a file", credentialsPath));
 
         return new GoogleCloudStorageConfig(credentialsFile, projectId, bucket);
     }
 
-    public GoogleCloudStorageConfig(File credentialsFile, String projectId, String bucketName) {
+    public GoogleCloudStorageConfig(@Nullable File credentialsFile, String projectId, String bucketName) {
         this.credentialsFile = credentialsFile;
         this.bucketName = bucketName;
         this.projectId = projectId;
+        this.hostName = null;
+    }
+
+    public GoogleCloudStorageConfig(
+            @Nullable File credentialsFile, String projectId, String bucketName, String hostName) {
+        this.credentialsFile = credentialsFile;
+        this.bucketName = bucketName;
+        this.projectId = projectId;
+        this.hostName = hostName;
     }
 
     public Credentials credentials() {
+        if (credentialsFile == null) return NoCredentials.getInstance();
         try {
             return GoogleCredentials.fromStream(new FileInputStream(credentialsFile));
         } catch (IOException e) {
@@ -86,5 +104,9 @@ public class GoogleCloudStorageConfig implements Configuration {
 
     public String projectId() {
         return projectId;
+    }
+
+    public String hostName() {
+        return hostName;
     }
 }

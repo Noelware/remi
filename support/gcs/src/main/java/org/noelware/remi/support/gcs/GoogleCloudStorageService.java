@@ -153,13 +153,15 @@ public class GoogleCloudStorageService implements StorageService<GoogleCloudStor
         LOG.info(format(
                 "Initializing Google Cloud Storage service with project ID [%s] in bucket [%s]",
                 config.projectId(), config.bucketName()));
-        final StorageOptions options = StorageOptions.newBuilder()
-                .setCredentials(config.credentials())
-                .setProjectId(config.projectId())
-                .build();
 
+        final StorageOptions.Builder optionsBuilder =
+                StorageOptions.newBuilder().setCredentials(config.credentials()).setProjectId(config.projectId());
+
+        if (config.hostName() != null) optionsBuilder.setHost(config.hostName());
+
+        final StorageOptions options = optionsBuilder.build();
         LOG.debug(format(
-                "Connected to Google Cloud Storage on host [%s] on project ID [%s]/bucket [%s] (app name: %s/user agent: %s)",
+                "Connected to Google Cloud Storage with host [%s] on project ID [%s]/bucket [%s] (app name: %s/user agent: %s)",
                 options.getHost(),
                 config.projectId(),
                 config.bucketName(),

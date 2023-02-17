@@ -23,34 +23,73 @@
 
 package org.noelware.remi.testing.support.gcs;
 
+import static java.lang.String.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.noelware.remi.core.Blob;
 import org.noelware.remi.support.gcs.GoogleCloudStorageConfig;
 import org.noelware.remi.support.gcs.GoogleCloudStorageService;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-@EnabledIf("org.noelware.remi.testing.support.gcs.GoogleCloudStorageServiceTests#canRun")
+@SuppressWarnings("resource")
+@Testcontainers(disabledWithoutDocker = true)
 public class GoogleCloudStorageServiceTests {
-    static boolean canRun() {
-        return System.getenv("GOOGLE_APPLICATION_CREDENTIALS") != null && System.getenv("GOOGLE_PROJECT_ID") != null;
+    private final AtomicReference<GoogleCloudStorageService> service = new AtomicReference<>(null);
+
+    @Container
+    private static final GenericContainer<?> container = new GenericContainer<>("fsouza/fake-gcs-server:1.44.0")
+            .withExposedPorts(4443)
+            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/fake-gcs-server", "-scheme", "http"));
+
+    // https://github.com/fsouza/fake-gcs-server/tree/main/examples/java#resumable-upload-operations-and-containerised-fake-gcs-server
+    @BeforeAll
+    public static void setup() throws IOException, InterruptedException {
+        final String externalUrl = format("http://%s:%d", container.getHost(), container.getMappedPort(4443));
+        final HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(externalUrl + "/_internal/config"))
+                .header("Content-Type", "application/json; charset=utf-8")
+                .PUT(HttpRequest.BodyPublishers.ofString(format("{\"externalUrl\":\"%s\"}", externalUrl)))
+                .build();
+
+        final HttpResponse<Void> res =
+                HttpClient.newBuilder().build().send(req, HttpResponse.BodyHandlers.discarding());
+        if (res.statusCode() != 200) throw new RuntimeException("Unable to update fake-gcs-server with external url");
     }
 
-    private void withGoogleCloudStorageService(Consumer<GoogleCloudStorageService> serviceConsumer) {
-        final GoogleCloudStorageConfig config = GoogleCloudStorageConfig.fromEnvironmentVariable(
-                "remi-test-owo", System.getenv("GOOGLE_PROJECT_ID"), null);
+    private void withStorageService(Consumer<GoogleCloudStorageService> serviceConsumer) {
+        if (service.get() != null) {
+            serviceConsumer.accept(service.get());
+            return;
+        }
 
-        final GoogleCloudStorageService service = new GoogleCloudStorageService(config);
-        service.init();
-        serviceConsumer.accept(service);
+        final GoogleCloudStorageConfig config = new GoogleCloudStorageConfig(
+                null,
+                "test-project",
+                "remi-test",
+                format("http://%s:%d", container.getHost(), container.getMappedPort(4443)));
+
+        final GoogleCloudStorageService gcsService = new GoogleCloudStorageService(config);
+        service.set(gcsService);
+        gcsService.init();
+
+        serviceConsumer.accept(gcsService);
     }
 
     @Test
     public void test_canWeConnectToGcs() {
-        withGoogleCloudStorageService(service -> {
+        withStorageService(service -> {
             final List<Blob> blobs = assertDoesNotThrow(() -> service.blobs());
             assertEquals(0, blobs.size());
         });

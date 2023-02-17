@@ -23,27 +23,54 @@
 
 package org.noelware.remi.gridfs;
 
+import com.mongodb.DB;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.*;
+import org.noelware.remi.core.contenttype.ContentTypeResolver;
+import org.noelware.remi.core.contenttype.TikaContentTypeResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GridfsStorageService implements StorageService<Configuration.None> {
+    private final ContentTypeResolver contentTypeResolver = new TikaContentTypeResolver();
+    private final Logger LOG = LoggerFactory.getLogger(GridfsStorageService.class);
+    private final GridFS inner;
+
+    public GridfsStorageService(DB db, String bucket) {
+        this.inner = new GridFS(db, bucket);
+    }
+
     @Override
-    public Blob blob(String path) throws IOException {
-        return null;
+    public Blob blob(String path) {
+        final GridFSDBFile file = this.inner.findOne(path);
+        if (file == null) return null;
+
+        return new Blob(
+                null,
+                file.getUploadDate().toInstant(),
+                file.getContentType(),
+                file.getInputStream(),
+                null,
+                file.getFilename(),
+                "gridfs",
+                "gridfs://%s".formatted(file.getFilename()),
+                file.getLength());
     }
 
     @Override
     public List<Blob> blobs(@Nullable ListBlobsRequest request) throws IOException {
-        return null;
+        return List.of();
     }
 
     @Override
     public List<Blob> blobs() throws IOException {
-        return null;
+        return blobs(null);
     }
 
     @Override

@@ -70,7 +70,7 @@ public class AmazonS3StorageService implements StorageService<AmazonS3StorageCon
     @Override
     public Blob blob(String path) throws IOException {
         final String prefixed = toPrefixedString(path);
-        LOG.info("Finding blob with path [{}]", prefixed);
+        LOG.debug("Finding blob in path [{}]", prefixed);
 
         ResponseInputStream<GetObjectResponse> resp;
         try {
