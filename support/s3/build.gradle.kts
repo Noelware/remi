@@ -26,5 +26,5 @@ plugins {
 }
 
 dependencies {
-    api("software.amazon.awssdk:s3:2.20.26")
+    api("software.amazon.awssdk:s3:2.20.27")
 }
