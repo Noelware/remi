@@ -26,5 +26,5 @@ plugins {
 }
 
 dependencies {
-    api("com.azure:azure-storage-blob:12.21.0")
+    api("com.azure:azure-storage-blob:12.21.1")
 }
