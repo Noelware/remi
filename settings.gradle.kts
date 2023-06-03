@@ -37,7 +37,7 @@ pluginManagement {
 
 buildscript {
     dependencies {
-        classpath("org.noelware.gradle:gradle-infra:1.1.1")
+        classpath("org.noelware.gradle:gradle-infra:1.3.0")
     }
 }
 
