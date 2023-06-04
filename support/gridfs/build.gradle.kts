@@ -26,5 +26,5 @@ plugins {
 }
 
 dependencies {
-    api("org.mongodb:mongo-java-driver:3.12.12")
+    api("org.mongodb:mongo-java-driver:3.12.13")
 }
