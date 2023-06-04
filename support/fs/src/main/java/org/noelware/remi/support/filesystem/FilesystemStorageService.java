@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,14 +27,15 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Blob;
 import org.noelware.remi.core.ListBlobsRequest;
 import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.UploadRequest;
+import org.noelware.remi.core.common.AbstractStorageService;
 import org.noelware.remi.core.contenttype.ContentTypeResolver;
 import org.noelware.remi.core.contenttype.TikaContentTypeResolver;
 import org.noelware.remi.support.filesystem.stats.FilesystemStats;
@@ -44,25 +45,58 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents an implementation of the {@link StorageService} for the local filesystem
  */
-public class FilesystemStorageService implements StorageService<FilesystemStorageConfig> {
+public class FilesystemStorageService extends AbstractStorageService<FilesystemStorageConfig> {
     protected final ContentTypeResolver contentTypeResolver = new TikaContentTypeResolver();
     private final FilesystemStorageConfig config;
     private final Logger LOG = LoggerFactory.getLogger(FilesystemStorageService.class);
 
     /**
-     * Initializes a new {@link FilesystemStorageService}.
-     * @param directory The directory to look up objects in
+     * Creates a new {@link FilesystemStorageService} with a path that points
+     * to a directory.
+     *
+     * @param directory Valid directory to locate, cannot be null.
+     * @throws NullPointerException If the given <code>directory</code> is null.
      */
-    public FilesystemStorageService(String directory) {
-        this(new FilesystemStorageConfig(directory));
+    public FilesystemStorageService(@NotNull String directory) {
+        this(new File(Objects.requireNonNull(directory)));
     }
 
     /**
-     * Initializes a new {@link FilesystemStorageService}.
-     * @param config The configuration object
+     * Creates a new {@link FilesystemStorageService} with a {@link File} object
+     * that points to a directory.
+     *
+     * @param file {@link File} to locate, cannot be null.
+     * @throws NullPointerException If the given <code>file</code> is null.
      */
-    public FilesystemStorageService(FilesystemStorageConfig config) {
-        this.config = config;
+    public FilesystemStorageService(@NotNull File file) {
+        this(
+                new TikaContentTypeResolver(),
+                new FilesystemStorageConfig(Objects.requireNonNull(file).getAbsolutePath()));
+    }
+
+    /**
+     * Creates a new {@link FilesystemStorageService} with a given configuration object.
+     * @param config Configuration object.
+     * @throws NullPointerException If the given configuration object is null.
+     */
+    public FilesystemStorageService(@NotNull FilesystemStorageConfig config) {
+        this(new TikaContentTypeResolver(), config);
+    }
+
+    /**
+     * Creates a new {@link FilesystemStorageService} with a given content-type resolver and configuration
+     * object.
+     *
+     * @param contentTypeResolver The {@link ContentTypeResolver content type resolver} to resolve content types
+     *                            for streams and byte arrays.
+     * @param config Configuration object.
+     * @throws NullPointerException If the given configuration object is null.
+     */
+    public FilesystemStorageService(
+            @Nullable ContentTypeResolver contentTypeResolver, @NotNull FilesystemStorageConfig config) {
+        super(contentTypeResolver);
+
+        this.config = Objects.requireNonNull(config);
     }
 
     /**
@@ -157,45 +191,36 @@ public class FilesystemStorageService implements StorageService<FilesystemStorag
     @Override
     public List<Blob> blobs(@Nullable ListBlobsRequest request) throws IOException {
         if (request == null) {
-            return Files.walk(Paths.get(config.directory()))
-                    .filter(Files::isRegularFile)
-                    .map(file -> {
-                        final BasicFileAttributes attributes;
-                        try {
-                            attributes = Files.getFileAttributeView(file, BasicFileAttributeView.class)
-                                    .readAttributes();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+            final List<Blob> blobs = new ArrayList<>();
+            try (final Stream<Path> stream =
+                    Files.walk(Paths.get(config.directory())).filter(Files::isRegularFile)) {
+                final Iterator<Path> iter = stream.iterator();
+                while (iter.hasNext()) {
+                    final Path file = iter.next();
+                    final BasicFileAttributes attributes = Files.getFileAttributeView(
+                                    file, BasicFileAttributeView.class)
+                            .readAttributes();
 
-                        // Create the ByteBuffer of the file content
-                        byte[] data;
-                        try (final FileInputStream fileChannel = new FileInputStream(file.toFile())) {
-                            data = fileChannel.readAllBytes();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                    byte[] data;
+                    try (final FileInputStream fis = new FileInputStream(file.toFile())) {
+                        data = fis.readAllBytes();
+                    }
 
-                        // Get the content type of the buffer
-                        final String contentType;
-                        try {
-                            contentType = contentTypeResolver.resolve(data);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                    final String contentType = contentTypeResolver.resolve(data);
+                    blobs.add(new Blob(
+                            attributes.lastModifiedTime().toInstant(),
+                            attributes.creationTime().toInstant(),
+                            contentType,
+                            new ByteArrayInputStream(data),
+                            null,
+                            file.toFile().getName(),
+                            "fs",
+                            String.format("fs://%s", file),
+                            attributes.size()));
+                }
+            }
 
-                        return new Blob(
-                                attributes.lastModifiedTime().toInstant(),
-                                attributes.creationTime().toInstant(),
-                                contentType,
-                                new ByteArrayInputStream(data),
-                                null,
-                                file.toFile().getName(),
-                                "fs",
-                                String.format("fs://%s", file),
-                                attributes.size());
-                    })
-                    .toList();
+            return blobs;
         }
 
         final RemiFileVisitor visitor = new RemiFileVisitor(this, request);

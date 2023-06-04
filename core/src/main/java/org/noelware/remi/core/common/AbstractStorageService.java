@@ -24,6 +24,7 @@
 package org.noelware.remi.core.common;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Configuration;
 import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.contenttype.ContentTypeResolver;
@@ -41,14 +42,14 @@ public abstract class AbstractStorageService<C extends Configuration> implements
      * for the content type resolver.
      */
     public AbstractStorageService() {
-        this(new TikaContentTypeResolver());
+        this(null);
     }
 
     /**
      * @param resolver The {@link ContentTypeResolver} to use.
      */
-    public AbstractStorageService(ContentTypeResolver resolver) {
-        this.contentTypeResolver = resolver;
+    public AbstractStorageService(@Nullable ContentTypeResolver resolver) {
+        this.contentTypeResolver = resolver == null ? new TikaContentTypeResolver() : resolver;
     }
 
     @Override
