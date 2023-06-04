@@ -86,13 +86,6 @@ public class Blob {
     }
 
     /**
-     * @return if this {@link Blob} is an instance of a {@link DirectoryBlob}
-     */
-    public boolean isNotDirectory() {
-        return !(this instanceof DirectoryBlob);
-    }
-
-    /**
      * @return {@link Instant} of when this object was first created. Can return <code>null</code>
      * if any storage implementations don't keep track of it.
      */

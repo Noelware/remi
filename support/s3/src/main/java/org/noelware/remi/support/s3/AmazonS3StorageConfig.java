@@ -25,8 +25,6 @@ package org.noelware.remi.support.s3;
 
 import java.net.URI;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Configuration;
 import software.amazon.awssdk.regions.Region;
@@ -38,7 +36,6 @@ public class AmazonS3StorageConfig implements Configuration {
     private final BucketCannedACL defaultBucketAcl;
     private final boolean enableSignerV4Requests;
     private final boolean enforcePathAccessStyle;
-    private final ExecutorService taskParallelExecutor;
     private final String secretAccessKey;
     private final String accessKeyId;
     private final String endpoint;
@@ -51,7 +48,6 @@ public class AmazonS3StorageConfig implements Configuration {
             BucketCannedACL defaultBucketAcl,
             boolean enableSignerV4Requests,
             boolean enforcePathAccessStyle,
-            ExecutorService taskParallelExecutor,
             String secretAccessKey,
             String accessKeyId,
             String endpoint,
@@ -60,7 +56,6 @@ public class AmazonS3StorageConfig implements Configuration {
             String bucket) {
         this.enableSignerV4Requests = enableSignerV4Requests;
         this.enforcePathAccessStyle = enforcePathAccessStyle;
-        this.taskParallelExecutor = taskParallelExecutor;
         this.defaultBucketAcl = defaultBucketAcl;
         this.defaultObjectAcl = defaultObjectAcl;
         this.secretAccessKey = secretAccessKey;
@@ -91,10 +86,6 @@ public class AmazonS3StorageConfig implements Configuration {
         return enableSignerV4Requests;
     }
 
-    public ExecutorService taskParallelExecutor() {
-        return taskParallelExecutor;
-    }
-
     public String secretAccessKey() {
         return secretAccessKey;
     }
@@ -120,7 +111,6 @@ public class AmazonS3StorageConfig implements Configuration {
     }
 
     public static class Builder {
-        private ExecutorService taskParallelExecutor = Executors.newFixedThreadPool(16);
         private ObjectCannedACL defaultObjectAcl = ObjectCannedACL.BUCKET_OWNER_READ;
         private BucketCannedACL defaultBucketAcl = BucketCannedACL.PRIVATE;
         private boolean enableSignerV4Requests = false;
@@ -157,11 +147,6 @@ public class AmazonS3StorageConfig implements Configuration {
 
         public Builder withEnforcedPathAccessStyle(boolean value) {
             enforcePathAccessStyle = value;
-            return this;
-        }
-
-        public Builder withTaskParallelExecutor(ExecutorService executor) {
-            taskParallelExecutor = executor;
             return this;
         }
 
@@ -225,7 +210,6 @@ public class AmazonS3StorageConfig implements Configuration {
                     defaultBucketAcl,
                     enableSignerV4Requests,
                     enforcePathAccessStyle,
-                    taskParallelExecutor,
                     secretAccessKey,
                     accessKeyId,
                     endpoint,

@@ -49,7 +49,7 @@ public abstract class AbstractStorageService<C extends Configuration> implements
      * @param resolver The {@link ContentTypeResolver} to use.
      */
     public AbstractStorageService(@Nullable ContentTypeResolver resolver) {
-        this.contentTypeResolver = resolver == null ? new TikaContentTypeResolver() : resolver;
+        this.contentTypeResolver = resolver != null ? resolver : new TikaContentTypeResolver();
     }
 
     @Override

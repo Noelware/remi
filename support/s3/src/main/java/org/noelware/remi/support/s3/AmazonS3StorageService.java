@@ -40,6 +40,7 @@ import org.noelware.remi.core.Blob;
 import org.noelware.remi.core.ListBlobsRequest;
 import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.UploadRequest;
+import org.noelware.remi.core.common.AbstractStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
@@ -51,7 +52,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.*;
 
-public class AmazonS3StorageService implements StorageService<AmazonS3StorageConfig> {
+public class AmazonS3StorageService extends AbstractStorageService<AmazonS3StorageConfig> {
     private final Logger LOG = LoggerFactory.getLogger(AmazonS3StorageService.class);
     private final AmazonS3StorageConfig config;
     private S3Client client;

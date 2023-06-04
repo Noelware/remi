@@ -38,10 +38,11 @@ import org.noelware.remi.core.Blob;
 import org.noelware.remi.core.ListBlobsRequest;
 import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.UploadRequest;
+import org.noelware.remi.core.common.AbstractStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GoogleCloudStorageService implements StorageService<GoogleCloudStorageConfig> {
+public class GoogleCloudStorageService extends AbstractStorageService<GoogleCloudStorageConfig> {
     private final Logger LOG = LoggerFactory.getLogger(GoogleCloudStorageService.class);
     private final GoogleCloudStorageConfig config;
     private Storage storage;
