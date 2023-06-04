@@ -36,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.noelware.remi.core.Blob;
 import org.noelware.remi.core.ListBlobsRequest;
-import org.noelware.remi.core.StorageService;
 import org.noelware.remi.core.UploadRequest;
 import org.noelware.remi.core.common.AbstractStorageService;
 import org.slf4j.Logger;
