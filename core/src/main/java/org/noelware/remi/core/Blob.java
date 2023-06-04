@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,7 +27,7 @@ import static java.lang.String.format;
 
 import java.io.*;
 import java.time.Instant;
-import java.time.LocalDateTime;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,8 +47,8 @@ public class Blob {
     /**
      * Constructs a {@link Blob}.
      *
-     * @param lastModifiedAt {@link LocalDateTime} of when this object was last modified at
-     * @param createdAt      {@link LocalDateTime} of when this object was created at
+     * @param lastModifiedAt {@link Instant} of when this object was last modified at
+     * @param createdAt      {@link Instant} of when this object was created at
      * @param contentType    The <code>Content-Type</code> of this {@link Blob}.
      * @param stream         Inner {@link InputStream} to read from
      * @param etag           The <code>Etag</code> of this {@link Blob}.
@@ -84,6 +84,13 @@ public class Blob {
     @Nullable
     public Instant lastModifiedAt() {
         return lastModifiedAt;
+    }
+
+    /**
+     * @return if this {@link Blob} is an instance of a {@link DirectoryBlob}
+     */
+    public boolean isNotDirectory() {
+        return !(this instanceof DirectoryBlob);
     }
 
     /**

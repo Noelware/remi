@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,7 +30,6 @@ package org.noelware.remi.support.azure.authentication;
 public interface AzureConnectionAuth {
     /**
      * Represents the {@link AzureAuthType authentication type} to use.
-     * @return {@link AzureAuthType} to use.
      */
     AzureAuthType authType();
 

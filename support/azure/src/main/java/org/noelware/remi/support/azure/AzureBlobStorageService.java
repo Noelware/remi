@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,16 +41,14 @@ import java.util.List;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.noelware.remi.core.Blob;
-import org.noelware.remi.core.ListBlobsRequest;
-import org.noelware.remi.core.StorageService;
-import org.noelware.remi.core.UploadRequest;
+import org.noelware.remi.core.*;
+import org.noelware.remi.core.common.AbstractStorageService;
 import org.noelware.remi.support.azure.authentication.AzureConnectionStringAuth;
 import org.noelware.remi.support.azure.authentication.AzureSasTokenAuth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AzureBlobStorageService implements StorageService<AzureBlobStorageConfig> {
+public class AzureBlobStorageService extends AbstractStorageService<AzureBlobStorageConfig> {
     private final Logger LOG = LoggerFactory.getLogger(AzureBlobStorageService.class);
     private final AzureBlobStorageConfig config;
 
@@ -260,17 +258,19 @@ public class AzureBlobStorageService implements StorageService<AzureBlobStorageC
             LOG.info(format(
                     "Using connection string [%s] as authentication",
                     "*".repeat(config.auth().supply().length())));
+
             builder.connectionString(config.auth().supply());
         } else if (config.auth() instanceof AzureSasTokenAuth) {
             LOG.info(format(
                     "Using generated SAS token [%s] as authentication",
                     "*".repeat(config.auth().supply().length())));
+
             builder.sasToken(config.auth().supply());
         }
 
         blobServiceClient = builder.buildClient();
-
         blobContainerClient = blobServiceClient.getBlobContainerClient(config.containerName());
+
         LOG.info("Attempting to create container [{}] if it doesn't exist...", config.containerName());
         blobContainerClient.createIfNotExists();
     }

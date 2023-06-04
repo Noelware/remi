@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
+ * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,15 +21,22 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.core;
+import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
 
-/**
- * Represents an empty object that represents the configuration object of a specific {@link StorageService}.
- */
-public interface Configuration {
-    /**
-     * Represents a {@link Configuration} that doesn't have any options
-     * to be configured.
-     */
-    class None implements Configuration {}
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
 }
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath("org.gradle.toolchains:foojay-resolver:0.4.0")
+    }
+}
+
+apply<FoojayToolchainsConventionPlugin>()

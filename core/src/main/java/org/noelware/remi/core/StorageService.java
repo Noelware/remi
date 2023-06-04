@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,8 +28,22 @@ import java.io.InputStream;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.noelware.remi.core.contenttype.ContentTypeResolver;
 
 public interface StorageService<C extends Configuration> {
+    /**
+     * @return the {@link ContentTypeResolver content type resolver} to resolve content types
+     * from buffers.
+     */
+    @NotNull
+    ContentTypeResolver contentTypeResolver();
+
+    /**
+     * Sets the content type resolver for this {@link StorageService}.
+     * @param resolver The resolver to set. Cannot be null.
+     */
+    void setContentTypeResolver(@NotNull ContentTypeResolver resolver);
+
     /**
      * Returns a {@link Blob} from the given <code>path</code> specified. This method can return
      * <code>null</code> if the blob was not found.

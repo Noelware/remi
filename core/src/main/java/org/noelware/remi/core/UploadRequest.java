@@ -1,5 +1,5 @@
 /*
- * 🧶 remi: Robust, and simple Java-based library to handle storage-related communications with different storage provider.
+ * 🧶 remi: Simple Java library to handle communication between applications and storage providers.
  * Copyright (c) 2022-2023 Noelware, LLC. <team@noelware.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,13 +45,19 @@ public class UploadRequest {
         this.key = key;
     }
 
+    /**
+     * Creates a new {@link Builder} to create an {@link UploadRequest}.
+     * @return {@link Builder} instance
+     */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Returns the underlying {@link InputStream} that will be used to upload
+     * Underlying {@link InputStream} that will be used to upload
      * to the specific storage implementation.
+     *
+     * @return {@link InputStream} that will be used to upload towards
      */
     @NotNull
     public InputStream inputStream() {
@@ -59,7 +65,7 @@ public class UploadRequest {
     }
 
     /**
-     * Returns the <code>Content-Type</code> header for this {@link UploadRequest}.
+     * @return <code>Content-Type</code> header for this {@link UploadRequest}.
      */
     @NotNull
     public String contentType() {
@@ -67,17 +73,26 @@ public class UploadRequest {
     }
 
     /**
-     * Returns the path to upload this request to.
+     * @return Path to upload this request to.
      */
     public String path() {
         return key;
     }
 
+    /**
+     * Builder to create a {@link UploadRequest}.
+     */
     public static class Builder {
         private InputStream inputStream = null;
         private String ct = null;
         private String path = null;
 
+        /**
+         * Sets the content type of this {@link UploadRequest}.
+         * @param contentType Valid <code>Content-Type</code> to set
+         * @throws IllegalStateException If the <code>Content-Type</code> was already set in this request builder
+         * @return this instance to chain methods
+         */
         public Builder withContentType(String contentType) {
             if (this.ct != null) throw new IllegalStateException("Content-Type header was already set in this builder");
 
@@ -85,6 +100,13 @@ public class UploadRequest {
             return this;
         }
 
+        /**
+         * Sets the underlying {@link InputStream} to use for uploading to the
+         * storage driver.
+         *
+         * @param stream {@link InputStream} that hasn't been consumed.
+         * @return this instance to chain methods
+         */
         public Builder withInputStream(InputStream stream) {
             if (inputStream != null) throw new IllegalStateException("Input stream was already set in this builder");
 
@@ -92,6 +114,14 @@ public class UploadRequest {
             return this;
         }
 
+        /**
+         * Same as {@link #withInputStream(InputStream)}, but uses a {@link ByteBuffer} as the
+         * data which will be transformed into a {@link InputStream}.
+         *
+         * @param buffer The underlying buffer
+         * @return this instance to chain methods
+         * @throws IOException if any i/o exception was thrown when transforming the {@link ByteBuffer} -> {@link InputStream}.
+         */
         public Builder withInputStream(ByteBuffer buffer) throws IOException {
             final PipedInputStream is = new PipedInputStream();
             try (final PipedOutputStream out = new PipedOutputStream(is)) {
@@ -101,6 +131,14 @@ public class UploadRequest {
             return withInputStream(is);
         }
 
+        /**
+         * Sets the path to upload this request to. This is used to fetch
+         * the {@link Blob} of this uploaded object, if succeeded.
+         *
+         * @param path Path to insert into
+         * @throws IllegalStateException If the path was already set
+         * @return this instance to chain methods
+         */
         public Builder withPath(String path) {
             if (this.path != null)
                 throw new IllegalStateException("Path to upload was already specified in this builder");
@@ -109,6 +147,10 @@ public class UploadRequest {
             return this;
         }
 
+        /**
+         * @throws IllegalStateException If the input stream or path were not specified.
+         * @return {@link UploadRequest} that was built.
+         */
         public UploadRequest build() {
             if (inputStream == null || path == null)
                 throw new IllegalStateException("`inputStream` or `path` was not specified");

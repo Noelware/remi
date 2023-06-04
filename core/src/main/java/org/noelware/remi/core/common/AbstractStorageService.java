@@ -21,15 +21,44 @@
  * SOFTWARE.
  */
 
-package org.noelware.remi.core;
+package org.noelware.remi.core.common;
+
+import org.jetbrains.annotations.NotNull;
+import org.noelware.remi.core.Configuration;
+import org.noelware.remi.core.StorageService;
+import org.noelware.remi.core.contenttype.ContentTypeResolver;
+import org.noelware.remi.core.contenttype.TikaContentTypeResolver;
 
 /**
- * Represents an empty object that represents the configuration object of a specific {@link StorageService}.
+ * Abstract class to implement to have a pre-configured {@link ContentTypeResolver}.
+ * @param <C> Configuration type.
  */
-public interface Configuration {
+public abstract class AbstractStorageService<C extends Configuration> implements StorageService<C> {
+    private ContentTypeResolver contentTypeResolver;
+
     /**
-     * Represents a {@link Configuration} that doesn't have any options
-     * to be configured.
+     * Constructs this {@link AbstractStorageService} but uses the {@link TikaContentTypeResolver}
+     * for the content type resolver.
      */
-    class None implements Configuration {}
+    public AbstractStorageService() {
+        this(new TikaContentTypeResolver());
+    }
+
+    /**
+     * @param resolver The {@link ContentTypeResolver} to use.
+     */
+    public AbstractStorageService(ContentTypeResolver resolver) {
+        this.contentTypeResolver = resolver;
+    }
+
+    @Override
+    @NotNull
+    public ContentTypeResolver contentTypeResolver() {
+        return contentTypeResolver;
+    }
+
+    @Override
+    public void setContentTypeResolver(@NotNull ContentTypeResolver resolver) {
+        this.contentTypeResolver = resolver;
+    }
 }

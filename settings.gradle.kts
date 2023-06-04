@@ -21,47 +21,28 @@
  * SOFTWARE.
  */
 
-@file:Suppress("UnstableApiUsage")
-
 rootProject.name = "remi"
 
 pluginManagement {
     repositories {
-        maven("https://maven.floofy.dev/repo/releases")
-        maven("https://maven.noelware.org")
         gradlePluginPortal()
         mavenCentral()
         mavenLocal()
     }
 }
 
-buildscript {
-    dependencies {
-        classpath("org.noelware.gradle:gradle-infra:1.1.1")
-    }
-}
-
 plugins {
-    id("org.noelware.gradle.settings") version "1.1.1"
-    id("com.gradle.enterprise") version "3.12.3"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
+    id("com.gradle.enterprise") version "3.12.6"
 }
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(
     ":bom",
     ":core",
     ":support:azure",
     ":support:fs",
     ":support:gcs",
-    //":support:gridfs",
+    ":support:gridfs",
     ":support:s3"
 )
-
-toolchainManagement {
-    jvm {
-        javaRepositories {
-            repository("noelware") {
-                resolverClass.set(org.noelware.infra.gradle.toolchains.NoelwareJvmToolchainResolver::class.java)
-            }
-        }
-    }
-}

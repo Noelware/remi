@@ -37,10 +37,17 @@ val Project.jarFileName: String
 
 fun MavenPublication.createPublicationMetadata(
     project: Project,
+    sourcesJar: TaskProvider<Jar>,
+    javadocJar: TaskProvider<Jar>
 ) {
+    from(project.components.getByName("java"))
+
     groupId = "org.noelware.remi"
     artifactId = "remi-${project.jarFileName}"
     version = "$VERSION"
+
+    artifact(sourcesJar.get())
+    artifact(javadocJar.get())
 
     pom {
         description by "\uD83E\uDDF6 Robust, and simple Java-based library to handle storage-related communications with different storage provider."

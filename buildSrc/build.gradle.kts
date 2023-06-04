@@ -21,7 +21,10 @@
  * SOFTWARE.
  */
 
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
+    id("com.diffplug.spotless") version "6.17.0"
     `kotlin-dsl`
 }
 
@@ -34,8 +37,25 @@ repositories {
 }
 
 dependencies {
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.15.0")
-    implementation("org.noelware.gradle:gradle-infra-plugin:1.2.0")
-    implementation("dev.floofy.commons:gradle:2.5.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.17.0")
+    implementation("dev.floofy.commons:gradle:2.5.1")
     implementation(gradleApi())
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = "17"
+}
+
+configurations.configureEach {
+    if (isCanBeResolved) {
+        attributes {
+            attribute(GradlePluginApiVersion.GRADLE_PLUGIN_API_VERSION_ATTRIBUTE, project.objects.named(GradleVersion.current().version))
+        }
+    }
 }
