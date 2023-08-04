@@ -26,5 +26,5 @@ plugins {
 }
 
 dependencies {
-    api("com.google.cloud:google-cloud-storage:2.23.0")
+    api("com.google.cloud:google-cloud-storage:2.26.0")
 }
