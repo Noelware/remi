@@ -37,7 +37,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.21.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.22.0")
     implementation("dev.floofy.commons:gradle:2.5.1")
     implementation(gradleApi())
 }
