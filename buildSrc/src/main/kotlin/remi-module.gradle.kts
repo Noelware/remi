@@ -53,8 +53,8 @@ dependencies {
     // test deps
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-    testImplementation("org.testcontainers:testcontainers:1.19.0")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.0")
+    testImplementation("org.testcontainers:testcontainers:1.19.1")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.1")
     testImplementation("org.slf4j:slf4j-simple:2.0.9")
 
     if (path.startsWith(":support")) {
