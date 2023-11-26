@@ -1,3 +1,8 @@
+> [!NOTE]
+>
+> Java version of Remi is under maintenance mode and if you wish to maintain the library, then contact Noel on Twitter ([@auguuwu](https://twitter.com/auguuwu)).
+> This library will be unmaintained and archived by December 15th, 2023 if no maintainers want to maintain it.
+
 # 🧶 Remi
 > *Robust, and simple Java-based library to handle storage-related communications with different storage providers with Amazon S3, Google Cloud Storage, Azure Blob Storage,
 > and the local filesystem support*
