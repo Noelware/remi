@@ -2,62 +2,35 @@
 >
 > Java version of Remi is under maintenance mode and if you wish to maintain the library, then contact Noel on Twitter ([@auguuwu](https://twitter.com/auguuwu)).
 > This library will be unmaintained and archived by December 15th, 2023 if no maintainers want to maintain it.
-
-# 🧶 Remi
-> *Robust, and simple Java-based library to handle storage-related communications with different storage providers with Amazon S3, Google Cloud Storage, Azure Blob Storage,
-> and the local filesystem support*
 >
-> <kbd><a href="https://github.com/Noelware/remi/releases/v0.5-beta">v0.5-beta</a></kbd>
+> **NEW (11/12/2025)**: Remi will now be maintained once again! Starting in early 2026, Remi will be revamped to follow up standards in Java now.
 
-**Remi** is a simple Java 17-based library to handle storage related communications with different storage providers. This is just an abstraction over
-commonly used functions you might use (like `FilesystemStorageService.open("./path/to/thing")` to open a File's content). **Remi** is most commonly used with
-[Hazel](https://noelware.org/hazel) to bring your files to the online web, [charted-server](https://charts.noelware.org) to host your Helm Charts together on the cloud,
-and much more!
+### 🧶 Remi | Java
+#### *Robust, simple Java 21 library to handle object storage communication*
 
-## Notice
-**Remi** was made in Kotlin previously (before `v0.5-beta`'s release) and the Kotlin-related code is no longer compatible with the
-new Java 17 API, which means you will have to migrate your code, which is fine! Here are the changes:
+**Remi** is a simple and robust Java 21 library to handle object storage communication with a unified API. Originally, this library was unmaintained from December 2023 to November 2025, where it is being revamped and probably faster than ever.
 
-- The **MinIO** storage handler is no longer available with the v0.5-beta release, please migrate to the Amazon S3 package since it supports MinIO.
-- All interfaces don't implement `suspend` functions anymore, all methods return synchronously by blocking the thread. This made it easier to port
-  the whole Remi library easily.
+> [!WARNING]
+> **Remi** is still experimental software! Things can break and API stability is not guaranteed.
 
 ## Supported Providers
-- **Amazon S3**                                                 (via the `org.noelware.remi:remi-storage-s3` Maven coordinate)
-- **Local Filesystem**                                          (via the `org.noelware.remi:remi-storage-fs` Maven coordinate)
-- **Google Cloud Storage**                       [experimental] (via the `org.noelware.remi:remi-storage-gcs` Maven coordinate)
-- **Azure Blob Storage**                         [experimental] (via the `org.noelware.remi:remi-storage-azure` Maven coordinate)
-- **MongoDB GridFS**                             [experimental] (via the `org.noelware.remi:remi-storage-gridfs` Maven coordinate)
+| Name                         | Maven Coordinate                   |
+| :--------------------------- | :--------------------------------- |
+| Amazon S3                    | `org.noelware.remi:storage-s3`     |
+| Local                        | `org.noelware.remi:storage-fs`     |
+| Google Cloud Storage         | `org.noelware.remi:storage-gcs`    |
+| Microsoft Azure Blob Storage | `org.noelware.remi:storage-azure`  |
+| MongoDB GridFS               | `org.noelware.remi:storage-gridfs` |
 
-## Unsupported Providers
-- **Oracle Cloud Infrastructure Object Storage**
-- **Digital Ocean Spaces**
-  - **Note**: You can use the S3 storage service since it has a S3-compatible API
-- **Alibaba Cloud OSS Storage**
-- **Tencent Cloud COS Storage**
-- **OpenStack Object Storage**
-- **Baidu Cloud BOS Storage**
-- **Netease Cloud NOS Storage**
-
-If you wish to provide community-built packages, you can do so with the [remi-storage-core](https://maven.noelware.org/-/org.noelware.remi/remi-storage-core) Maven package, which
-you can read the documentation [here](https://remi.noelware.org) on how to build your own storage service.
+If you wish, you can also provide your own community-built package with the [`org.noelware.remi:storage-core`](https://maven.noelware.org/-/org.noelware.remi/storage-core) Maven package, which you can read the documentation on [`docs.noelware.org`](https://docs.noelware.org/libraries/java/remi) for more information.
 
 ## Usage
-Refer to the [Installation](#installation) section on how to integrate **Remi** into your own toolchain (Gradle, Maven).
+Refer to the [Installation](#installation) section on how to integrate **Remi** into your own toolchain (Gradle, Maven, Bazel).
 
 This example uses the local filesystem's storage service.
 
 ```java
-import org.noelware.remi.support.filesystem.*;
-import org.noelware.remi.core.*;
-
-public class Program {
-    public static void main(String[] args) {
-        final FilesystemStorageService fsService = new FilesystemStorageService("./path/to/data/to/use");
-        fsService.open("./file/to/load/in/given/directory.txt");
-        // Opens as a `InputStream`.
-    }
-}
+/* TODO: this */
 ```
 
 ## Installation
@@ -102,11 +75,22 @@ dependencies {
 </dependencies>
 ```
 
+### Bazel
+#### `MODULE.bazel`
+```python
+bazel_dep(name = "remi", version = "<version>")
+git_override(
+  module_name = "remi",
+  repository = "https://github.com/Noelware/remi.git",
+  commit = "<pinned commit here>"
+)
+```
+
 ### Downloading from Noelware's Maven Repository
 You can download the libraries yourself with `curl` or `wget` and link them with **javac**. You can download with the specific URL:
 
 ```http
-GET https://maven.noelware.org/org/noelware/remi/remi-[package]/[version]/remi-[package]-[version]-sources.jar
+GET https://maven.noelware.org/repo/org/noelware/remi/remi-[package]/[version]/remi-[package]-[version]-sources.jar
 ```
 
 ## License
